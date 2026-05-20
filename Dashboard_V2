@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SheetPoint — AI Financial & Decision Engine</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.16/index.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #ffffff;
+      --green-50: #f0fdf4;
+      --green-100: #dcfce7;
+      --green-400: #4ade80;
+      --green-500: #22c55e;
+      --green-600: #16a34a;
+      --blue-50: #eff6ff;
+      --blue-100: #dbeafe;
+      --blue-400: #60a5fa;
+      --blue-500: #3b82f6;
+      --blue-600: #2563eb;
+    }
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(180deg, var(--bg-main) 0%, var(--green-50) 50%, var(--blue-50) 100%); color: #0f172a; min-height: 100vh; }
+    .glass-card { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.6); box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+    .cell-input { transition: all 0.15s ease; border-radius: 4px; }
+    .cell-input:focus { outline: 2px solid var(--blue-500); background: var(--blue-100); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+    .tab-btn.active { border-bottom: 3px solid var(--blue-500); color: var(--blue-600); background: var(--blue-50); }
+    .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .spin-loader { border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid var(--blue-500); border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .credit-badge { background: linear-gradient(135deg, var(--green-500), var(--blue-400)); color: white; box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3); }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .brain-glow { box-shadow: 0 0 20px rgba(59, 130, 246, 0.25); }
+  </style>
+</head>
+<body class="p-4 md:p-6">
+
+  <!-- HEADER -->
+  <header class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-blue-400 flex items-center justify-center text-white font-bold text-lg shadow-lg">SP</div>
+      <div>
+        <h1 class="text-xl font-bold tracking-tight">SheetPoint</h1>
+        <p class="text-xs text-slate-500">AI Financial Spreadsheet & Decision Engine</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-4">
+      <div id="creditDisplay" class="credit-badge px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        <span id="creditCount">30 / 30</span> Credits
+      </div>
+      <button onclick="openUpgradeModal()" class="hidden md:flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg text-sm hover:bg-slate-700 transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
+        Upgrade Plan
+      </button>
+      <div class="w-9 h-9 rounded-full bg-gradient-to-r from-blue-400 to-green-400 border-2 border-white shadow-md"></div>
+    </div>
+  </header>
+
+  <!-- MAIN GRID -->
+  <main class="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-7xl mx-auto">
+    
+    <!-- LEFT PANEL: Navigation, Recent, Stats -->
+    <aside class="lg:col-span-3 space-y-5 fade-in" style="animation-delay: 0.1s;">
+      <div class="glass-card rounded-2xl p-5">
+        <h3 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+          <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg> Menu Cepat
+        </h3>
+        <ul class="space-y-2">
+          <li class="flex justify-between items-center text-sm p-2 hover:bg-white rounded-lg cursor-pointer transition"><span>📊 Proyek Baru</span></li>
+          <li class="flex justify-between items-center text-sm p-2 hover:bg-white rounded-lg cursor-pointer transition"><span>📁 Folder Proyek</span></li>
+          <li class="flex justify-between items-center text-sm p-2 hover:bg-white rounded-lg cursor-pointer transition"><span>👥 Bagikan Tim</span></li>
+          <li class="flex justify-between items-center text-sm p-2 hover:bg-white rounded-lg cursor-pointer transition"><span>⚙️ Pengaturan</span></li>
+        </ul>
+      </div>
+
+      <div class="glass-card rounded-2xl p-5">
+        <h3 class="text-sm font-semibold text-slate-700 mb-3">📈 Analitik Penggunaan</h3>
+        <div class="space-y-3">
+          <div class="flex justify-between text-sm"><span class="text-slate-500">Total Sheet</span><span class="font-medium">12</span></div>
+          <div class="flex justify-between text-sm"><span class="text-slate-500">Kategori Terbanyak</span><span class="font-medium text-green-600">Keuangan</span></div>
+          <div class="w-full bg-slate-100 rounded-full h-2 mt-2"><div class="bg-gradient-to-r from-green-400 to-blue-400 h-2 rounded-full" style="width: 65%"></div></div>
+          <p class="text-xs text-slate-400">65% kredit terpakai bulan ini</p>
+        </div>
+      </div>
+
+      <div class="glass-card rounded-2xl p-5">
+        <h3 class="text-sm font-semibold text-slate-700 mb-3">🕒 Proyek Terbaru</h3>
+        <ul id="recentProjects" class="space-y-2 text-sm">
+          <li class="p-2 bg-white rounded-lg hover:shadow-sm cursor-pointer transition">Cashflow Startup SaaS 2026</li>
+          <li class="p-2 bg-white rounded-lg hover:shadow-sm cursor-pointer transition">Marketing Plan Q3</li>
+          <li class="p-2 bg-white rounded-lg hover:shadow-sm cursor-pointer transition">Bitcoin Treasury Strategy</li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- CENTER PANEL: Prompt -> AI Brain -> Sheet -->
+    <section class="lg:col-span-6 space-y-5 fade-in" style="animation-delay: 0.2s;">
+      <!-- PROMPT ENGINE -->
+      <div class="glass-card rounded-2xl p-6">
+        <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide">✨ Masukkan Prompt Natural Language</label>
+        <div class="mt-3 flex flex-col gap-3">
+          <textarea id="promptInput" rows="3" class="w-full p-3 rounded-xl border border-slate-200 bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-50 text-sm placeholder-slate-400 resize-none" placeholder="Contoh: Buatkan cashflow bisnis F&B 3 tahun dengan skenario optimis & pesimis..."></textarea>
+          <div class="flex flex-wrap gap-2 text-xs">
+            <span class="px-2 py-1 bg-blue-50 text-blue-600 rounded-md cursor-pointer hover:bg-blue-100">+ Industry: F&B</span>
+            <span class="px-2 py-1 bg-green-50 text-green-600 rounded-md cursor-pointer hover:bg-green-100">+ Currency: IDR</span>
+            <span class="px-2 py-1 bg-slate-50 text-slate-600 rounded-md cursor-pointer hover:bg-slate-100">+ Timeframe: 3 Thn</span>
+          </div>
+          <button id="generateBtn" onclick="handleGenerate()" class="w-full py-3 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-medium rounded-xl shadow-lg transition transform hover:scale-[1.01] active:scale-95 flex justify-center items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Generate Model (2 Credits)
+          </button>
+        </div>
+      </div>
+
+      <!-- AI BRAIN RECOMMENDATION -->
+      <div id="aiBrainPanel" class="hidden glass-card rounded-2xl p-5 brain-glow border-l-4 border-l-blue-400">
+        <div class="flex items-center gap-2 mb-3">
+          <svg class="w-5 h-5 text-blue-500 animate-pulse-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          <h3 class="font-bold text-slate-800">AI Brain Decision Engine</h3>
+        </div>
+        <div class="space-y-2 text-sm">
+          <p class="bg-blue-50 p-2 rounded-lg border border-blue-100 text-slate-700">💡 <span class="font-medium">Rekomendasi:</span> Gunakan asumsi pertumbuhan CAGR 15% untuk industri SaaS F&B. Tambahkan buffer biaya operasional +10%.</p>
+          <div class="flex gap-2">
+            <button onclick="applyAIRefine('bearish')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-md text-xs transition">📉 Tambah Skenario Bearish</button>
+            <button onclick="applyAIRefine('optimize')" class="px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-700 rounded-md text-xs transition">✨ Optimasi Model</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SPREADSHEET PREVIEW / EDITOR -->
+      <div id="sheetContainer" class="hidden glass-card rounded-2xl p-4 overflow-x-auto">
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+          <h3 class="font-semibold text-slate-700">📊 Preview Spreadsheet</h3>
+          <div class="flex gap-1">
+            <button class="tab-btn active px-3 py-1.5 text-xs rounded-t-md hover:bg-slate-50 transition" onclick="switchTab(this, 'revenue')">Revenue</button>
+            <button class="tab-btn px-3 py-1.5 text-xs rounded-t-md hover:bg-slate-50 transition" onclick="switchTab(this, 'cost')">Cost</button>
+            <button class="tab-btn px-3 py-1.5 text-xs rounded-t-md hover:bg-slate-50 transition" onclick="switchTab(this, 'profit')">Profit</button>
+            <button class="tab-btn px-3 py-1.5 text-xs rounded-t-md hover:bg-slate-50 transition" onclick="switchTab(this, 'kpi')">KPI</button>
+          </div>
+        </div>
+        <table id="sheetTable" class="w-full border-collapse text-sm">
+          <thead id="sheetHead" class="bg-slate-50 text-slate-600"></thead>
+          <tbody id="sheetBody" class="divide-y divide-slate-100"></tbody>
+        </table>
+        <div class="mt-4 flex justify-between items-center text-xs text-slate-400">
+          <span>✅ Mode Edit Aktif | Klik sel untuk ubah nilai</span>
+          <span id="lastSaved">Tersimpan otomatis</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: Export, Actions -->
+    <aside class="lg:col-span-3 space-y-5 fade-in" style="animation-delay: 0.3s;">
+      <div class="glass-card rounded-2xl p-5">
+        <h3 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+          <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m0 0v8m8-6l-4 4m0 0l-4-4"/></svg> Ekspor & Bagikan
+        </h3>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="exportFile('xlsx')" class="p-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1">📄 .xlsx Excel</button>
+          <button onclick="exportFile('csv')" class="p-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1">📊 .csv Data</button>
+          <button onclick="exportFile('pdf')" class="p-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1">📑 .PDF Report</button>
+          <button onclick="exportFile('gsheets')" class="p-2 bg-orange-50 hover:bg-orange-100 text-orange-700 rounded-lg text-xs font-medium transition flex items-center justify-center gap-1">☁️ Google Sheet</button>
+        </div>
+        <div class="mt-3 p-2 bg-white border border-slate-100 rounded-lg text-xs text-slate-500">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" class="rounded text-blue-500 focus:ring-blue-500"> Sertakan Branding Perusahaan
+          </label>
+        </div>
+      </div>
+
+      <div class="glass-card rounded-2xl p-5">
+        <h3 class="text-sm font-semibold text-slate-700 mb-3">⚙️ Aksi Cepat</h3>
+        <div class="space-y-2">
+          <button onclick="showToast('Proyek berhasil disimpan')" class="w-full py-2 bg-white border border-slate-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg text-sm transition">💾 Simpan Proyek</button>
+          <button onclick="showToast('Duplikat dibuat di folder Finance')" class="w-full py-2 bg-white border border-slate-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg text-sm transition">🔄 Duplikat</button>
+          <button onclick="showToast('Link berbagi disalin ke clipboard')" class="w-full py-2 bg-white border border-slate-200 hover:border-blue-300 hover:bg-blue-50 rounded-lg text-sm transition">🔗 Bagikan Tim</button>
+        </div>
+      </div>
+
+      <div class="glass-card rounded-2xl p-5 bg-gradient-to-br from-slate-800 to-slate-900 text-white">
+        <h3 class="font-bold text-sm mb-1">🔑 API Key (Coming Soon)</h3>
+        <p class="text-xs text-slate-300 mb-3">Integrasikan SheetPoint ke sistem internal Anda.</p>
+        <div class="p-2 bg-slate-700 rounded text-xs font-mono text-green-400 truncate">sk_live_8x9z2...4m1p</div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- UPGRADE MODAL -->
+  <div id="upgradeModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="glass-card bg-white max-w-md w-full p-6 rounded-2xl shadow-2xl transform transition-all scale-100">
+      <div class="text-center mb-5">
+        <div class="w-12 h-12 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">⚠️</div>
+        <h2 class="text-xl font-bold text-slate-800">Credit Habis</h2>
+        <p class="text-sm text-slate-500 mt-1">Upgrade paket untuk lanjut generate & refine model finansial tanpa batas.</p>
+      </div>
+      <div class="space-y-3 mb-6">
+        <div class="p-4 border border-slate-200 rounded-xl hover:border-blue-400 cursor-pointer transition relative">
+          <div class="absolute -top-2 right-2 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-full">POPULAR</div>
+          <h4 class="font-semibold text-slate-800">Pro Plan</h4>
+          <p class="text-xs text-slate-500">500 Credits / bulan • AI Refine Unlimited • Export Branding</p>
+          <p class="text-lg font-bold mt-2">Rp 299.000<span class="text-xs font-normal text-slate-400">/bulan</span></p>
+        </div>
+        <div class="p-4 border border-slate-200 rounded-xl hover:border-blue-400 cursor-pointer transition">
+          <h4 class="font-semibold text-slate-800">Startup Pack</h4>
+          <p class="text-xs text-slate-500">100 Credits / bulan • Akses Template Premium</p>
+          <p class="text-lg font-bold mt-2">Rp 89.000<span class="text-xs font-normal text-slate-400">/bulan</span></p>
+        </div>
+      </div>
+      <button onclick="closeUpgradeModal()" class="w-full py-3 bg-slate-800 text-white font-medium rounded-xl hover:bg-slate-700 transition">Nanti Saja</button>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed bottom-6 right-6 bg-slate-800 text-white px-5 py-3 rounded-xl shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 text-sm flex items-center gap-2">
+    <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+    <span id="toastMsg">Aksi berhasil</span>
+  </div>
+
+  <script>
+    // STATE MANAGEMENT
+    const appState = {
+      credits: 30,
+      maxCredits: 30,
+      isGenerating: false,
+      currentSheetData: null,
+      history: []
+    };
+
+    // DOM ELEMENTS
+    const elCredit = document.getElementById('creditCount');
+    const elPrompt = document.getElementById('promptInput');
+    const elBtn = document.getElementById('generateBtn');
+    const elBrain = document.getElementById('aiBrainPanel');
+    const elSheet = document.getElementById('sheetContainer');
+    const elThead = document.getElementById('sheetHead');
+    const elTbody = document.getElementById('sheetBody');
+    const modalUpgrade = document.getElementById('upgradeModal');
+
+    // INIT
+    function init() {
+      updateCreditUI();
+      loadMockRecent();
+    }
+
+    // CREDIT LOGIC
+    function updateCreditUI() {
+      elCredit.textContent = `${appState.credits} / ${appState.maxCredits}`;
+      const pct = (appState.credits / appState.maxCredits) * 100;
+      document.getElementById('creditDisplay').style.background = `linear-gradient(135deg, hsl(${pct * 1.2}, 70%, 50%), var(--blue-400))`;
+      if (appState.credits <= 0) {
+        openUpgradeModal();
+        elBtn.disabled = true;
+        elBtn.classList.add('opacity-50', 'cursor-not-allowed');
+      } else {
+        elBtn.disabled = false;
+        elBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+      }
+    }
+
+    function consumeCredits(amount) {
+      if (appState.credits < amount) {
+        openUpgradeModal();
+        return false;
+      }
+      appState.credits -= amount;
+      updateCreditUI();
+      return true;
+    }
+
+    // GENERATION FLOW
+    function handleGenerate() {
+      if (!elPrompt.value.trim()) {
+        showToast('Masukkan prompt terlebih dahulu', 'error');
+        elPrompt.focus();
+        return;
+      }
+      if (appState.isGenerating) return;
+
+      if (!consumeCredits(2)) return;
+
+      appState.isGenerating = true;
+      elBtn.innerHTML = `<div class="spin-loader"></div> AI Processing...`;
+      elBrain.classList.add('hidden');
+      elSheet.classList.add('hidden');
+
+      // Simulate AI Delay
+      setTimeout(() => {
+        generateSheetData(elPrompt.value);
+        elBrain.classList.remove('hidden');
+        elSheet.classList.remove('hidden');
+        appState.isGenerating = false;
+        elBtn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Generate Model (2 Credits)`;
+        addToRecent('Model: ' + elPrompt.value.substring(0, 20) + '...');
+        showToast('Model berhasil di-generate & siap diedit');
+      }, 1500);
+    }
+
+    function generateSheetData(prompt) {
+      const isFB = prompt.toLowerCase().includes('f&b') || prompt.toLowerCase().includes('restoran');
+      const rows = [
+        ['Kategori', 'Tahun 1', 'Tahun 2', 'Tahun 3', 'Total'],
+        ['Pendapatan Kotor', 'Rp 1.2M', 'Rp 1.8M', 'Rp 2.4M', 'Rp 5.4M'],
+        ['HPP (35%)', 'Rp 420K', 'Rp 630K', 'Rp 840K', 'Rp 1.89M'],
+        ['Laba Kotor', 'Rp 780K', 'Rp 1.17M', 'Rp 1.56M', 'Rp 3.51M'],
+        ['Opex Marketing', 'Rp 150K', 'Rp 200K', 'Rp 250K', 'Rp 600K'],
+        ['Opex Operasional', 'Rp 300K', 'Rp 350K', 'Rp 400K', 'Rp 1.05M'],
+        ['Laba Bersih', 'Rp 330K', 'Rp 620K', 'Rp 910K', 'Rp 1.86M'],
+        ['Margin Bersih', '27.5%', '34.4%', '37.9%', '34.4%']
+      ];
+      appState.currentSheetData = rows;
+      renderSheet(rows);
+    }
+
+    function renderSheet(data) {
+      elThead.innerHTML = '';
+      elTbody.innerHTML = '';
+      data.forEach((row, rIdx) => {
+        const tr = document.createElement('tr');
+        row.forEach((cell, cIdx) => {
+          const td = document.createElement('td');
+          td.contentEditable = true;
+          td.className = 'cell-input p-3 border border-slate-100 bg-white text-sm outline-none';
+          td.textContent = cell;
+          if (rIdx === 0) {
+            td.className += ' font-semibold text-slate-600 bg-slate-50';
+            td.contentEditable = false;
+          } else if (cIdx > 0) {
+            td.className += ' text-right font-mono text-slate-700';
+          }
+          td.addEventListener('blur', () => { showToast('Sel diperbarui', 'info'); });
+          tr.appendChild(td);
+        });
+        if (rIdx === 0) elThead.appendChild(tr);
+        else elTbody.appendChild(tr);
+      });
+    }
+
+    function switchTab(btn, tabName) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      showToast(`Tab "${tabName.toUpperCase()}" aktif (Simulasi Data)`, 'info');
+    }
+
+    // AI REFINE
+    function applyAIRefine(type) {
+      if (!consumeCredits(1)) return;
+      showToast(`AI Refine (${type}) sedang memproses...`, 'info');
+      setTimeout(() => {
+        if (type === 'bearish') {
+          const rows = appState.currentSheetData;
+          rows[2][1] = 'Rp 380K'; rows[2][2] = 'Rp 550K'; rows[2][3] = 'Rp 710K';
+          rows[6][1] = 'Rp 250K'; rows[6][2] = 'Rp 400K'; rows[6][3] = 'Rp 590K';
+          rows[7][1] = '20.8%'; rows[7][2] = '22.2%'; rows[7][3] = '24.5%';
+          renderSheet(rows);
+          showToast('Skenario Bearish diterapkan (-15% revenue)');
+        } else {
+          showToast('Model telah dioptimasi: Biaya efisiensi +8%');
+        }
+      }, 800);
+    }
+
+    // EXPORT SIMULATION
+    function exportFile(fmt) {
+      showToast(`Mengunduh ${fmt.toUpperCase()}... (Investor-Ready Format)`, 'success');
+    }
+
+    // UI UTILS
+    function openUpgradeModal() { modalUpgrade.classList.remove('hidden'); }
+    function closeUpgradeModal() { modalUpgrade.classList.add('hidden'); }
+    
+    function showToast(msg, type='success') {
+      const t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 2500);
+    }
+
+    function addToRecent(name) {
+      const list = document.getElementById('recentProjects');
+      const li = document.createElement('li');
+      li.className = 'p-2 bg-white rounded-lg hover:shadow-sm cursor-pointer transition fade-in';
+      li.textContent = name;
+      list.prepend(li);
+      if (list.children.length > 4) list.lastElementChild.remove();
+    }
+
+    function loadMockRecent() {}
+
+    // INIT APP
+    init();
+  </script>
+</body>
+</html>
+
