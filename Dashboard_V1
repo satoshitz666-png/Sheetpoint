@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinAI Spreadsheet Builder & Decision Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.0/300;400;500;600;700;800/index.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { inter: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#f0f5ff', 100: '#e0eaff', 200: '#c2d5ff', 300: '#93b4fd',
+                            400: '#608efb', 500: '#3b6df7', 600: '#2550eb', 700: '#1d3fd8',
+                            800: '#1e35ae', 900: '#1e308b', 950: '#142054'
+                        },
+                        dark: {
+                            50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1',
+                            400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155',
+                            800: '#1e293b', 900: '#0f172a', 950: '#020617'
+                        }
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'fade-in': 'fadeIn 0.4s ease-out',
+                        'typing': 'typing 1.5s infinite',
+                    },
+                    keyframes: {
+                        float: { '0%, 100%': { transform: 'translateY(0px)' }, '50%': { transform: 'translateY(-10px)' } },
+                        glow: { '0%': { boxShadow: '0 0 5px rgba(59, 109, 247, 0.3)' }, '100%': { boxShadow: '0 0 20px rgba(59, 109, 247, 0.6)' } },
+                        slideUp: { '0%': { transform: 'translateY(20px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        typing: { '0%': { content: '""' }, '33%': { content: '"."' }, '66%': { content: '".."' }, '100%': { content: '"..."' } },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .scrollbar-thin::-webkit-scrollbar { width: 6px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #475569; }
+        .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(148, 163, 184, 0.1); }
+        .glass-light { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(8px); border: 1px solid rgba(148, 163, 184, 0.08); }
+        .gradient-border { border: 1px solid transparent; background-clip: padding-box; position: relative; }
+        .gradient-border::before { content: ''; position: absolute; inset: -1px; border-radius: inherit; background: linear-gradient(135deg, #3b6df7, #8b5cf6, #3b6df7); z-index: -1; opacity: 0.5; }
+        .token-ring { animation: rotate 8s linear infinite; }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .cell-edit { outline: 2px solid #3b6df7; background: rgba(59, 109, 247, 0.1) !important; }
+        .brain-glow { box-shadow: 0 0 30px rgba(139, 92, 246, 0.4), 0 0 60px rgba(139, 92, 246, 0.1); }
+        .shimmer { background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%); background-size: 200% 100%; animation: shimmer 2s infinite; }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+        .plan-card:hover { transform: translateY(-4px); transition: all 0.3s ease; }
+        .sparkline { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawLine 2s ease forwards; }
+        @keyframes drawLine { to { stroke-dashoffset: 0; } }
+    </style>
+</head>
+<body class="bg-dark-950 text-white font-inter overflow-hidden">
+    <div id="app" class="flex h-screen">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-72 bg-dark-900 border-r border-dark-700/50 flex flex-col transition-all duration-300 z-30">
+            <!-- Logo -->
+            <div class="p-5 border-b border-dark-700/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center shadow-lg shadow-brand-500/30">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold bg-gradient-to-r from-brand-400 to-purple-400 bg-clip-text text-transparent">FinAI Platform</h1>
+                        <p class="text-[10px] text-dark-400 uppercase tracking-wider">Spreadsheet & Decision Engine</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Token Display -->
+            <div class="p-5 border-b border-dark-700/50">
+                <div class="glass-light rounded-2xl p-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-semibold text-dark-300 uppercase tracking-wider">Credit Token</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 font-semibold">Trial</span>
+                    </div>
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="relative w-14 h-14">
+                            <svg class="w-14 h-14 -rotate-90" viewBox="0 0 56 56">
+                                <circle cx="28" cy="28" r="24" fill="none" stroke="#1e293b" stroke-width="4"/>
+                                <circle id="tokenCircle" cx="28" cy="28" r="24" fill="none" stroke="url(#tokenGrad)" stroke-width="4" stroke-linecap="round" stroke-dasharray="150.8" stroke-dashoffset="0"/>
+                                <defs><linearGradient id="tokenGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#3b6df7"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient></defs>
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span id="tokenCount" class="text-sm font-bold text-white">30</span>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-2xl font-bold text-white" id="tokenDisplay">30</p>
+                            <p class="text-xs text-dark-400">dari 30 token tersedia</p>
+                        </div>
+                    </div>
+                    <button onclick="showUpgradeModal()" class="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-brand-600 to-purple-600 text-xs font-semibold hover:from-brand-500 hover:to-purple-500 transition-all shadow-lg shadow-brand-500/20 hover:shadow-brand-500/40">
+                        ⚡ Upgrade Plan
+                    </button>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 p-4 space-y-1 overflow-y-auto scrollbar-thin">
+                <p class="text-[10px] font-semibold text-dark-500 uppercase tracking-widest px-3 mb-2">Main Menu</p>
+                <button onclick="switchTab('generate')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all bg-brand-500/10 text-brand-400" data-tab="generate">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                    Generate Spreadsheet
+                </button>
+                <button onclick="switchTab('editor')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-dark-400 hover:bg-dark-800 hover:text-white" data-tab="editor">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    Editor & Builder
+                </button>
+                <button onclick="switchTab('brain')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-dark-400 hover:bg-dark-800 hover:text-white" data-tab="brain">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    AI Brain
+                    <span class="ml-auto px-1.5 py-0.5 text-[10px] rounded-md bg-purple-500/20 text-purple-400 font-semibold">AI</span>
+                </button>
+
+                <p class="text-[10px] font-semibold text-dark-500 uppercase tracking-widest px-3 mb-2 mt-5">Workspace</p>
+                <button onclick="switchTab('history')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-dark-400 hover:bg-dark-800 hover:text-white" data-tab="history">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    History
+                    <span id="historyCount" class="ml-auto px-1.5 py-0.5 text-[10px] rounded-md bg-dark-700 text-dark-300">0</span>
+                </button>
+                <button onclick="switchTab('templates')" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-dark-400 hover:bg-dark-800 hover:text-white" data-tab="templates">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+                    Templates
+                </button>
+
+                <p class="text-[10px] font-semibold text-dark-500 uppercase tracking-widest px-3 mb-2 mt-5">Export</p>
+                <button onclick="showExportModal()" class="nav-btn w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-dark-400 hover:bg-dark-800 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Export Data
+                </button>
+            </nav>
+
+            <!-- User Profile -->
+            <div class="p-4 border-t border-dark-700/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-brand-500 to-purple-500 flex items-center justify-center text-sm font-bold">U</div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-white truncate">User Trial</p>
+                        <p class="text-xs text-dark-400">trial@finai.com</p>
+                    </div>
+                    <button class="text-dark-500 hover:text-white transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Bar -->
+            <header class="h-16 glass border-b border-dark-700/50 flex items-center justify-between px-6 z-20">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="lg:hidden text-dark-400 hover:text-white transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
+                    <h2 id="pageTitle" class="text-lg font-semibold text-white">Generate Spreadsheet</h2>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-dark-800/50 border border-dark-700/50">
+                        <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                        <span class="text-xs text-dark-400">AI Engine Online</span>
+                    </div>
+                    <button onclick="showNotifications()" class="relative p-2 rounded-lg hover:bg-dark-800 transition-colors text-dark-400 hover:text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                        <span class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-brand-500 rounded-full text-[10px] flex items-center justify-center font-bold">2</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="flex-1 overflow-y-auto scrollbar-thin p-6" id="contentArea">
+                <!-- Generate Tab -->
+                <div id="tab-generate" class="tab-content animate-fade-in">
+                    <div class="max-w-4xl mx-auto">
+                        <!-- Hero -->
+                        <div class="text-center mb-8">
+                            <h3 class="text-3xl font-bold mb-2">Buat Financial Spreadsheet</h3>
+                            <p class="text-dark-400">Cukup deskripsikan kebutuhan Anda, AI akan membuatkan spreadsheet lengkap</p>
+                        </div>
+
+                        <!-- Quick Templates -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                            <button onclick="useQuickPrompt('Buat laporan keuangan bulanan perusahaan dengan revenue, expense, dan net profit selama 12 bulan')" class="p-3 rounded-xl bg-dark-800/50 border border-dark-700/50 hover:border-brand-500/50 transition-all text-left group">
+                                <div class="text-2xl mb-1">📊</div>
+                                <p class="text-xs font-medium text-dark-300 group-hover:text-white">Laporan Keuangan</p>
+                            </button>
+                            <button onclick="useQuickPrompt('Buat analisis cash flow dengan proyeksi 6 bulan ke depan termasuk inflow dan outflow')" class="p-3 rounded-xl bg-dark-800/50 border border-dark-700/50 hover:border-brand-500/50 transition-all text-left group">
+                                <div class="text-2xl mb-1">💰</div>
+                                <p class="text-xs font-medium text-dark-300 group-hover:text-white">Cash Flow</p>
+                            </button>
+                            <button onclick="useQuickPrompt('Buat budget planning tahunan dengan kategori marketing, operational, dan salary allocation')" class="p-3 rounded-xl bg-dark-800/50 border border-dark-700/50 hover:border-brand-500/50 transition-all text-left group">
+                                <div class="text-2xl mb-1">📋</div>
+                                <p class="text-xs font-medium text-dark-300 group-hover:text-white">Budget Planning</p>
+                            </button>
+                            <button onclick="useQuickPrompt('Buat investment analysis spreadsheet dengan ROI, NPV, IRR calculation untuk 5 proyek')" class="p-3 rounded-xl bg-dark-800/50 border border-dark-700/50 hover:border-brand-500/50 transition-all text-left group">
+                                <div class="text-2xl mb-1">📈</div>
+                                <p class="text-xs font-medium text-dark-300 group-hover:text-white">Investment Analysis</p>
+                            </button>
+                        </div>
+
+                        <!-- Prompt Input -->
+                        <div class="glass-light rounded-2xl p-1 mb-6">
+                            <div class="p-4">
+                                <textarea id="promptInput" rows="4" class="w-full bg-transparent text-white placeholder-dark-500 resize-none focus:outline-none text-sm" placeholder="Contoh: Buatkan laporan laba rugi kuartal 3 tahun 2026 dengan detail revenue stream, COGS, operating expense, dan margin analysis..."></textarea>
+                                <div class="flex items-center justify-between mt-3 pt-3 border-t border-dark-700/50">
+                                    <div class="flex items-center gap-2">
+                                        <button onclick="attachFile()" class="p-1.5 rounded-lg hover:bg-dark-700 transition-colors text-dark-400 hover:text-white" title="Attach file">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                                        </button>
+                                        <button class="p-1.5 rounded-lg hover:bg-dark-700 transition-colors text-dark-400 hover:text-white" title="Voice input">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+                                        </button>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span id="tokenCost" class="text-xs text-amber-400/80">~2 token</span>
+                                        <button onclick="generateSpreadsheet()" id="generateBtn" class="px-5 py-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 text-sm font-semibold hover:from-brand-500 hover:to-brand-400 transition-all shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40 flex items-center gap-2">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                            Generate
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Generations -->
+                        <div id="recentGenerations" class="space-y-3">
+                            <p class="text-xs font-semibold text-dark-500 uppercase tracking-wider mb-3">Generasi Terbaru</p>
+                            <div id="generationList" class="space-y-2">
+                                <!-- Dynamic content -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Editor Tab -->
+                <div id="tab-editor" class="tab-content hidden">
+                    <div class="h-full flex flex-col">
+                        <!-- Toolbar -->
+                        <div class="flex items-center gap-2 mb-4 pb-4 border-b border-dark-700/50">
+                            <div class="flex items-center gap-1 bg-dark-800/50 rounded-lg p-1">
+                                <button onclick="editorAction('bold')" class="p-1.5 rounded hover:bg-dark-700 transition-colors text-dark-400 hover:text-white" title="Bold"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 4h8a4 4 0 014 4 4 4 0 01-4 4H6z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 12h9a4 4 0 014 4 4 4 0 01-4 4H6z"/></svg></button>
+                                <button onclick="editorAction('italic')" class="p-1.5 rounded hover:bg-dark-700 transition-colors text-dark-400 hover:text-white" title="Italic"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 4h4m-8 16h4M14 4L10 20"/></svg></button>
+                                <div class="w-px h-5 bg-dark-700 mx-1"></div>
+                                <button onclick="editorAction('addRow')" class="p-1.5 rounded hover:bg-dark-700 transition-colors text-dark-400 hover:text-white text-xs" title="Add Row">+ Row</button>
+                                <button onclick="editorAction('addCol')" class="p-1.5 rounded hover:bg-dark-700 transition-colors text-dark-400 hover:text-white text-xs" title="Add Column">+ Col</button>
+                                <button onclick="editorAction('deleteRow')" class="p-1.5 rounded hover:bg-dark-700 transition-colors text-dark-400 hover:text-white text-xs" title="Delete Row">- Row</button>
+                                <button onclick="editorAction('deleteCol')" class="p-1.5 rounded hover:bg-dark-700 transition-colors text-dark-400 hover:text-white text-xs" title="Delete Column">- Col</button>
+                            </div>
+                            <div class="w-px h-6 bg-dark-700"></div>
+                            <div class="flex items-center gap-1 bg-dark-800/50 rounded-lg p-1">
+                                <button onclick="editorAction('alignLeft')" class="p-1.5 rounded hover:bg-dark-700 transition-colors text-dark-400 hover:text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h10M4 18h14"/></svg></button>
+                                <button onclick="editorAction('alignCenter')" class="p-1.5 rounded hover:bg-dark-700 transition-colors text-dark-400 hover:text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M7 12h10M5 18h14"/></svg></button>
+                                <button onclick="editorAction('alignRight')" class="p-1.5 rounded hover:bg-dark-700 transition-colors text-dark-400 hover:text-white"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M10 12h10M6 18h14"/></svg></button>
+                            </div>
+                            <div class="flex-1"></div>
+                            <button onclick="editorAction('formula')" class="p-2 rounded-lg bg-dark-800/50 hover:bg-dark-700 transition-colors text-dark-400 hover:text-white text-xs font-mono">Σ Formula</button>
+                            <button onclick="showExportModal()" class="p-2 rounded-lg bg-emerald-600/20 hover:bg-emerald-600/30 transition-colors text-emerald-400 text-xs font-semibold flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                Export
+                            </button>
+                        </div>
+
+                        <!-- Spreadsheet -->
+                        <div class="flex-1 overflow-auto rounded-xl border border-dark-700/50 bg-dark-900/50">
+                            <table id="spreadsheetTable" class="w-full text-sm">
+                                <thead>
+                                    <tr class="bg-dark-800">
+                                        <th class="w-12 px-3 py-2 text-xs font-semibold text-dark-400 border-r border-dark-700/50 sticky left-0 bg-dark-800 z-10"></th>
+                                        <th class="px-3 py-2 text-xs font-semibold text-dark-400 border-r border-dark-700/50 min-w-[140px]">A</th>
+                                        <th class="px-3 py-2 text-xs font-semibold text-dark-400 border-r border-dark-700/50 min-w-[140px]">B</th>
+                                        <th class="px-3 py-2 text-xs font-semibold text-dark-400 border-r border-dark-700/50 min-w-[140px]">C</th>
+                                        <th class="px-3 py-2 text-xs font-semibold text-dark-400 border-r border-dark-700/50 min-w-[140px]">D</th>
+                                        <th class="px-3 py-2 text-xs font-semibold text-dark-400 border-r border-dark-700/50 min-w-[140px]">E</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="spreadsheetBody">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Cell Info -->
+                        <div class="flex items-center gap-3 mt-3 pt-3 border-t border-dark-700/50">
+                            <span id="activeCell" class="text-xs font-mono px-2 py-1 rounded bg-dark-800 text-brand-400">A1</span>
+                            <input type="text" id="cellFormula" class="flex-1 bg-dark-800/50 border border-dark-700/50 rounded-lg px-3 py-1.5 text-xs text-white placeholder-dark-500 focus:outline-none focus:border-brand-500" placeholder="fx: Enter formula or value">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Brain Tab -->
+                <div id="tab-brain" class="tab-content hidden">
+                    <div class="max-w-5xl mx-auto">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-brand-500 flex items-center justify-center animate-glow">
+                                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-bold">AI Brain Recommendation</h3>
+                                <p class="text-sm text-dark-400">Analisis cerdas untuk keputusan finansial terbaik</p>
+                            </div>
+                            <div class="ml-auto flex items-center gap-2">
+                                <button onclick="generateBrainAnalysis()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-brand-600 text-sm font-semibold hover:from-purple-500 hover:to-brand-500 transition-all shadow-lg shadow-purple-500/25">
+                                    🧠 Analyze
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Analysis Cards -->
+                        <div id="brainAnalysis" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                            <!-- Best Choice Card -->
+                            <div class="glass-light rounded-2xl p-5 border-l-4 border-l-emerald-400">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="text-lg">🏆</span>
+                                    <h4 class="font-semibold text-emerald-400">The Best Choice</h4>
+                                </div>
+                                <p id="bestChoiceText" class="text-sm text-dark-300 mb-3">Klik "Analyze" untuk mendapatkan rekomendasi terbaik dari AI Brain berdasarkan data spreadsheet Anda.</p>
+                                <div id="bestChoiceScore" class="flex items-center gap-2">
+                                    <div class="flex-1 h-2 rounded-full bg-dark-700">
+                                        <div id="scoreBar" class="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-1000" style="width: 0%"></div>
+                                    </div>
+                                    <span id="scoreValue" class="text-xs font-bold text-emerald-400">--%</span>
+                                </div>
+                            </div>
+
+                            <!-- Risk Analysis -->
+                            <div class="glass-light rounded-2xl p-5 border-l-4 border-l-amber-400">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="text-lg">⚠️</span>
+                                    <h4 class="font-semibold text-amber-400">Risk Analysis</h4>
+                                </div>
+                                <div id="riskItems" class="space-y-2">
+                                    <p class="text-sm text-dark-400 italic">Menunggu analisis...</p>
+                                </div>
+                            </div>
+
+                            <!-- Optimization -->
+                            <div class="glass-light rounded-2xl p-5 border-l-4 border-l-brand-400">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="text-lg">🚀</span>
+                                    <h4 class="font-semibold text-brand-400">Optimization</h4>
+                                </div>
+                                <div id="optimizationItems" class="space-y-2">
+                                    <p class="text-sm text-dark-400 italic">Menunggu analisis...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI Insight Chat -->
+                        <div class="glass-light rounded-2xl p-5">
+                            <h4 class="font-semibold mb-4 flex items-center gap-2">
+                                <span class="text-purple-400">💬</span> AI Insight Chat
+                            </h4>
+                            <div id="brainChat" class="space-y-3 mb-4 max-h-64 overflow-y-auto scrollbar-thin">
+                                <div class="flex gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-brand-500 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                                    </div>
+                                    <div class="glass rounded-xl p-3 max-w-lg">
+                                        <p class="text-sm text-dark-200">Halo! Saya AI Brain. Saya akan menganalisis data spreadsheet Anda dan memberikan rekomendasi terbaik. Silakan klik <strong>Analyze</strong> atau tanyakan sesuatu.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <input type="text" id="brainInput" class="flex-1 bg-dark-800/50 border border-dark-700/50 rounded-xl px-4 py-2.5 text-sm text-white placeholder-dark-500 focus:outline-none focus:border-purple-500" placeholder="Tanyakan sesuatu tentang data keuangan Anda..." onkeypress="if(event.key==='Enter')askBrain()">
+                                <button onclick="askBrain()" class="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 transition-colors text-sm font-semibold">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Tab -->
+                <div id="tab-history" class="tab-content hidden">
+                    <div class="max-w-4xl mx-auto">
+                        <h3 class="text-xl font-bold mb-4">Riwayat Generasi</h3>
+                        <div id="historyList" class="space-y-3">
+                            <div class="text-center py-16">
+                                <svg class="w-16 h-16 mx-auto text-dark-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <p class="text-dark-500">Belum ada riwayat generasi</p>
+                                <p class="text-sm text-dark-600 mt-1">Mulai generate spreadsheet untuk melihat history</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Templates Tab -->
+                <div id="tab-templates" class="tab-content hidden">
+                    <div class="max-w-5xl mx-auto">
+                        <h3 class="text-xl font-bold mb-2">Template Spreadsheet</h3>
+                        <p class="text-sm text-dark-400 mb-6">Pilih template siap pakai untuk memulai</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <button onclick="useTemplate('profit-loss')" class="plan-card glass-light rounded-2xl p-5 text-left transition-all hover:border-brand-500/50">
+                                <div class="text-3xl mb-3">📊</div>
+                                <h4 class="font-semibold mb-1">Profit & Loss Statement</h4>
+                                <p class="text-xs text-dark-400 mb-3">Laporan laba rugi lengkap dengan revenue, COGS, operating expenses</p>
+                                <span class="text-xs text-brand-400 font-semibold">~1 token</span>
+                            </button>
+                            <button onclick="useTemplate('balance-sheet')" class="plan-card glass-light rounded-2xl p-5 text-left transition-all hover:border-brand-500/50">
+                                <div class="text-3xl mb-3">🏦</div>
+                                <h4 class="font-semibold mb-1">Balance Sheet</h4>
+                                <p class="text-xs text-dark-400 mb-3">Neraca keuangan dengan assets, liabilities, dan equity</p>
+                                <span class="text-xs text-brand-400 font-semibold">~1 token</span>
+                            </button>
+                            <button onclick="useTemplate('cash-flow')" class="plan-card glass-light rounded-2xl p-5 text-left transition-all hover:border-brand-500/50">
+                                <div class="text-3xl mb-3">💸</div>
+                                <h4 class="font-semibold mb-1">Cash Flow Projection</h4>
+                                <p class="text-xs text-dark-400 mb-3">Proyeksi arus kas 12 bulan dengan inflow/outflow analysis</p>
+                                <span class="text-xs text-brand-400 font-semibold">~2 token</span>
+                            </button>
+                            <button onclick="useTemplate('budget')" class="plan-card glass-light rounded-2xl p-5 text-left transition-all hover:border-brand-500/50">
+                                <div class="text-3xl mb-3">📋</div>
+                                <h4 class="font-semibold mb-1">Annual Budget Plan</h4>
+                                <p class="text-xs text-dark-400 mb-3">Perencanaan anggaran tahunan multi-departemen</p>
+                                <span class="text-xs text-brand-400 font-semibold">~2 token</span>
+                            </button>
+                            <button onclick="useTemplate('investment')" class="plan-card glass-light rounded-2xl p-5 text-left transition-all hover:border-brand-500/50">
+                                <div class="text-3xl mb-3">📈</div>
+                                <h4 class="font-semibold mb-1">Investment Analysis</h4>
+                                <p class="text-xs text-dark-400 mb-3">Analisis investasi dengan ROI, NPV, IRR calculations</p>
+                                <span class="text-xs text-brand-400 font-semibold">~2 token</span>
+                            </button>
+                            <button onclick="useTemplate('break-even')" class="plan-card glass-light rounded-2xl p-5 text-left transition-all hover:border-brand-500/50">
+                                <div class="text-3xl mb-3">⚖️</div>
+                                <h4 class="font-semibold mb-1">Break Even Analysis</h4>
+                                <p class="text-xs text-dark-400 mb-3">Analisis titik impas dengan fixed & variable costs</p>
+                                <span class="text-xs text-brand-400 font-semibold">~1 token</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Upgrade Modal -->
+    <div id="upgradeModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeUpgradeModal()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="glass rounded-3xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto scrollbar-thin animate-slide-up">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-2xl font-bold">Upgrade Your Plan</h3>
+                        <p class="text-sm text-dark-400 mt-1">Token Anda habis. Upgrade untuk melanjutkan.</p>
+                    </div>
+                    <button onclick="closeUpgradeModal()" class="p-2 rounded-lg hover:bg-dark-700 transition-colors text-dark-400 hover:text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <!-- Starter -->
+                    <div class="plan-card glass-light rounded-2xl p-6 border border-dark-700/50 relative">
+                        <h4 class="font-bold text-lg mb-1">Starter</h4>
+                        <p class="text-xs text-dark-400 mb-4">Untuk personal use</p>
+                        <div class="mb-4">
+                            <span class="text-3xl font-bold">Rp 99K</span>
+                            <span class="text-dark-400 text-sm">/bulan</span>
+                        </div>
+                        <ul class="space-y-2 mb-6 text-sm">
+                            <li class="flex items-center gap-2 text-dark-300"><svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 100 Token/bulan</li>
+                            <li class="flex items-center gap-2 text-dark-300"><svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Basic Templates</li>
+                            <li class="flex items-center gap-2 text-dark-300"><svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Export CSV/XLSX</li>
+                            <li class="flex items-center gap-2 text-dark-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg> AI Brain Basic</li>
+                        </ul>
+                        <button onclick="selectPlan('starter')" class="w-full py-2.5 rounded-xl border border-dark-600 hover:border-brand-500 text-sm font-semibold transition-all hover:bg-brand-500/10">Pilih Starter</button>
+                    </div>
+
+                    <!-- Pro -->
+                    <div class="plan-card glass-light rounded-2xl p-6 border-2 border-brand-500 relative overflow-hidden">
+                        <div class="absolute top-0 right-0 px-3 py-1 bg-gradient-to-r from-brand-500 to-purple-500 text-xs font-bold rounded-bl-xl">POPULER</div>
+                        <h4 class="font-bold text-lg mb-1">Professional</h4>
+                        <p class="text-xs text-dark-400 mb-4">Untuk bisnis berkembang</p>
+                        <div class="mb-4">
+                            <span class="text-3xl font-bold bg-gradient-to-r from-brand-400 to-purple-400 bg-clip-text text-transparent">Rp 249K</span>
+                            <span class="text-dark-400 text-sm">/bulan</span>
+                        </div>
+                        <ul class="space-y-2 mb-6 text-sm">
+                            <li class="flex items-center gap-2 text-dark-300"><svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> 500 Token/bulan</li>
+                            <li class="flex items-center gap-2 text-dark-300"><svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> All Templates</li>
+                            <li class="flex items-center gap-2 text-dark-300"><svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Export All Formats</li>
+                            <li class="flex items-center gap-2 text-dark-300"><svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> AI Brain Advanced</li>
+                        </ul>
+                        <button onclick="selectPlan('pro')" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-purple-600 text-sm font-semibold hover:from-brand-500 hover:to-purple-500 transition-all shadow-lg shadow-brand-500/25">Pilih Pro</button>
+                    </div>
+
+                    <!-- Enterprise -->
+                    <div class="plan-card glass-light rounded-2xl p-6 border border-dark-700/50 relative">
+                        <h4 class="font-bold text-lg mb-1">Enterprise</h4>
+                        <p class="text-xs text-dark-400 mb-4">Untuk perusahaan besar</p>
+                        <div class="mb-4">
+                            <span class="text-3xl font-bold">Rp 599K</span>
+                            <span class="text-dark-400 text-sm">/bulan</span>
+                        </div>
+                        <ul class="space-y-2 mb-6 text-sm">
+                            <li class="flex items-center gap-2 text-dark-300"><svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Unlimited Token</li>
+                            <li class="flex items-center gap-2 text-dark-300"><svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Custom Templates</li>
+                            <li class="flex items-center gap-2 text-dark-300"><svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> API Access</li>
+                            <li class="flex items-center gap-2 text-dark-300"><svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> AI Brain Premium + API</li>
+                        </ul>
+                        <button onclick="selectPlan('enterprise')" class="w-full py-2.5 rounded-xl border border-dark-600 hover:border-brand-500 text-sm font-semibold transition-all hover:bg-brand-500/10">Hubungi Sales</button>
+                    </div>
+                </div>
+
+                <p class="text-center text-xs text-dark-500">Semua plan termasuk support 24/7 dan update fitur otomatis. Bisa cancel kapan saja.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="exportModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="closeExportModal()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="glass rounded-3xl p-6 max-w-md w-full animate-slide-up">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-xl font-bold">Export Spreadsheet</h3>
+                    <button onclick="closeExportModal()" class="p-2 rounded-lg hover:bg-dark-700 transition-colors text-dark-400 hover:text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <div class="space-y-3">
+                    <button onclick="exportData('xlsx')" class="w-full flex items-center gap-4 p-4 rounded-xl bg-dark-800/50 hover:bg-dark-700/50 transition-all border border-dark-700/50 hover:border-emerald-500/50 group">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500/30 transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        </div>
+                        <div class="text-left flex-1">
+                            <p class="font-semibold text-sm">Excel (.xlsx)</p>
+                            <p class="text-xs text-dark-400">Format Excel standar</p>
+                        </div>
+                        <svg class="w-5 h-5 text-dark-500 group-hover:text-emerald-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <button onclick="exportData('csv')" class="w-full flex items-center gap-4 p-4 rounded-xl bg-dark-800/50 hover:bg-dark-700/50 transition-all border border-dark-700/50 hover:border-blue-500/50 group">
+                        <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 group-hover:bg-blue-500/30 transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        </div>
+                        <div class="text-left flex-1">
+                            <p class="font-semibold text-sm">CSV (.csv)</p>
+                            <p class="text-xs text-dark-400">Comma-separated values</p>
+                        </div>
+                        <svg class="w-5 h-5 text-dark-500 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <button onclick="exportData('pdf')" class="w-full flex items-center gap-4 p-4 rounded-xl bg-dark-800/50 hover:bg-dark-700/50 transition-all border border-dark-700/50 hover:border-red-500/50 group">
+                        <div class="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400 group-hover:bg-red-500/30 transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                        </div>
+                        <div class="text-left flex-1">
+                            <p class="font-semibold text-sm">PDF (.pdf)</p>
+                            <p class="text-xs text-dark-400">Dokumen PDF siap cetak</p>
+                        </div>
+                        <svg class="w-5 h-5 text-dark-500 group-hover:text-red-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                    <button onclick="exportData('json')" class="w-full flex items-center gap-4 p-4 rounded-xl bg-dark-800/50 hover:bg-dark-700/50 transition-all border border-dark-700/50 hover:border-purple-500/50 group">
+                        <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 group-hover:bg-purple-500/30 transition-all">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                        </div>
+                        <div class="text-left flex-1">
+                            <p class="font-semibold text-sm">JSON (.json)</p>
+                            <p class="text-xs text-dark-400">Format data terstruktur</p>
+                        </div>
+                        <svg class="w-5 h-5 text-dark-500 group-hover:text-purple-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300">
+        <div class="glass rounded-xl px-5 py-3 flex items-center gap-3 shadow-2xl">
+            <span id="toastIcon" class="text-lg">✅</span>
+            <span id="toastMessage" class="text-sm font-medium">Berhasil!</span>
+        </div>
+    </div>
+
+    <!-- No Tokens Modal -->
+    <div id="noTokensModal" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="glass rounded-3xl p-8 max-w-md w-full text-center animate-slide-up">
+                <div class="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center mb-4 animate-float">
+                    <span class="text-4xl">⚡</span>
+                </div>
+                <h3 class="text-2xl font-bold mb-2">Token Habis!</h3>
+                <p class="text-dark-400 mb-6">30 token trial Anda telah terpakai. Upgrade plan untuk mendapatkan lebih banyak token dan fitur premium.</p>
+                <div class="flex flex-col gap-3">
+                    <button onclick="closeNoTokensModal(); showUpgradeModal();" class="w-full py-3 rounded-xl bg-gradient-to-r from-brand-600 to-purple-600 text-sm font-bold hover:from-brand-500 hover:to-purple-500 transition-all shadow-lg shadow-brand-500/25">
+                        Upgrade Sekarang
+                    </button>
+                    <button onclick="closeNoTokensModal()" class="w-full py-3 rounded-xl border border-dark-600 text-sm font-medium hover:bg-dark-800 transition-all text-dark-400">
+                        Nanti Saja
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let state = {
+            tokens: 30,
+            maxTokens: 30,
+            history: [],
+            currentSpreadsheet: null,
+            activeCell: { row: 0, col: 0 },
+            spreadsheetData: [],
+            currentTab: 'generate',
+            sidebarOpen: true
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initSpreadsheet();
+            updateTokenDisplay();
+        });
+
+        // Token Management
+        function useTokens(count) {
+            if (state.tokens < count) {
+                document.getElementById('noTokensModal').classList.remove('hidden');
+                return false;
+            }
+            state.tokens -= count;
+            updateTokenDisplay();
+            return true;
+        }
+
+        function updateTokenDisplay() {
+            const pct = state.tokens / state.maxTokens;
+            const circle = document.getElementById('tokenCircle');
+            const circumference = 150.8;
+            circle.style.strokeDashoffset = circumference * (1 - pct);
+            document.getElementById('tokenCount').textContent = state.tokens;
+            document.getElementById('tokenDisplay').textContent = state.tokens;
+
+            if (state.tokens === 0) {
+                document.getElementById('tokenDisplay').classList.add('text-red-400');
+                document.getElementById('tokenDisplay').classList.remove('text-white');
+            }
+        }
+
+        // Tab Switching
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tab}`).classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-brand-500/10', 'text-brand-400');
+                btn.classList.add('text-dark-400');
+            });
+            const activeBtn = document.querySelector(`[data-tab="${tab}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-brand-500/10', 'text-brand-400');
+                activeBtn.classList.remove('text-dark-400');
+            }
+
+            const titles = { generate: 'Generate Spreadsheet', editor: 'Editor & Builder', brain: 'AI Brain', history: 'History', templates: 'Templates' };
+            document.getElementById('pageTitle').textContent = titles[tab] || '';
+            state.currentTab = tab;
+        }
+
+        // Sidebar Toggle
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+            state.sidebarOpen = !state.sidebarOpen;
+        }
+
+        // Quick Prompt
+        function useQuickPrompt(prompt) {
+            document.getElementById('promptInput').value = prompt;
+            document.getElementById('promptInput').focus();
+        }
+
+        // Template
+        function useTemplate(type) {
+            if (!useTokens(1)) return;
+
+            const templates = {
+                'profit-loss': 'Buat laporan laba rugi dengan revenue, COGS, gross profit, operating expenses, dan net income',
+                'balance-sheet': 'Buat neraca keuangan dengan assets, liabilities, dan equity',
+                'cash-flow': 'Buat cash flow projection 12 bulan dengan operating, investing, financing activities',
+                'budget': 'Buat annual budget planning dengan department allocation dan variance analysis',
+                'investment': 'Buat investment analysis dengan ROI, NPV, IRR untuk multiple projects',
+                'break-even': 'Buat break even analysis dengan fixed costs, variable costs, dan contribution margin'
+            };
+
+            showToast('📋', 'Template dimuat...');
+            generateWithPrompt(templates[type]);
+        }
+
+        // Generate Spreadsheet
+        function generateSpreadsheet() {
+            const prompt = document.getElementById('promptInput').value.trim();
+            if (!prompt) {
+                showToast('⚠️', 'Masukkan prompt terlebih dahulu');
+                return;
+            }
+            if (!useTokens(2)) return;
+            generateWithPrompt(prompt);
+        }
+
+        function generateWithPrompt(prompt) {
+            document.getElementById('promptInput').value = '';
+            showLoadingState();
+
+            setTimeout(() => {
+                const data = generateMockData(prompt);
+                state.currentSpreadsheet = { prompt, data, timestamp: new Date().toLocaleString() };
+                state.spreadsheetData = data;
+
+                renderSpreadsheet(data);
+                addHistory(prompt);
+                hideLoadingState();
+                switchTab('editor');
+                showToast('✅', 'Spreadsheet berhasil di-generate!');
+            }, 2000);
+        }
+
+        function generateMockData(prompt) {
+            const lower = prompt.toLowerCase();
+            if (lower.includes('laba rugi') || lower.includes('profit loss') || lower.includes('profit & loss')) {
+                return [
+                    ['Keterangan', 'Jan 2026', 'Feb 2026', 'Mar 2026', 'Q1 Total'],
+                    ['Revenue', 'Rp 150.000.000', 'Rp 165.000.000', 'Rp 178.000.000', 'Rp 493.000.000'],
+                    ['COGS', '-Rp 60.000.000', '-Rp 66.000.000', '-Rp 71.200.000', '-Rp 197.200.000'],
+                    ['Gross Profit', 'Rp 90.000.000', 'Rp 99.000.000', 'Rp 106.800.000', 'Rp 295.800.000'],
+                    ['Marketing Expense', '-Rp 15.000.000', '-Rp 18.000.000', '-Rp 20.000.000', '-Rp 53.000.000'],
+                    ['Salary & Wages', '-Rp 25.000.000', '-Rp 25.000.000', '-Rp 27.500.000', '-Rp 77.500.000'],
+                    ['Rent & Utilities', '-Rp 8.000.000', '-Rp 8.000.000', '-Rp 8.000.000', '-Rp 24.000.000'],
+                    ['Other Expenses', '-Rp 5.000.000', '-Rp 6.500.000', '-Rp 7.000.000', '-Rp 18.500.000'],
+                    ['Total OpEx', '-Rp 53.000.000', '-Rp 57.500.000', '-Rp 62.500.000', '-Rp 173.000.000'],
+                    ['EBITDA', 'Rp 37.000.000', 'Rp 41.500.000', 'Rp 44.300.000', 'Rp 122.800.000'],
+                    ['Tax (22%)', '-Rp 8.140.000', '-Rp 9.130.000', '-Rp 9.746.000', '-Rp 27.016.000'],
+                    ['Net Income', 'Rp 28.860.000', 'Rp 32.370.000', 'Rp 34.554.000', 'Rp 95.784.000'],
+                    ['Net Margin', '19.2%', '19.6%', '19.4%', '19.4%']
+                ];
+            } else if (lower.includes('cash flow') || lower.includes('arus kas')) {
+                return [
+                    ['Kategori', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
+                    ['Operating Activities', '', '', '', '', '', ''],
+                    ['  Cash Inflow', 'Rp 180M', 'Rp 195M', 'Rp 210M', 'Rp 225M', 'Rp 240M', 'Rp 255M'],
+                    ['  Cash Outflow', '-Rp 120M', '-Rp 125M', '-Rp 135M', '-Rp 140M', '-Rp 148M', '-Rp 155M'],
+                    ['  Net Operating', 'Rp 60M', 'Rp 70M', 'Rp 75M', 'Rp 85M', 'Rp 92M', 'Rp 100M'],
+                    ['Investing Activities', '', '', '', '', '', ''],
+                    ['  Equipment Purchase', '-Rp 25M', 'Rp 0', '-Rp 15M', 'Rp 0', 'Rp 0', '-Rp 20M'],
+                    ['  Net Investing', '-Rp 25M', 'Rp 0', '-Rp 15M', 'Rp 0', 'Rp 0', '-Rp 20M'],
+                    ['Financing Activities', '', '', '', '', '', ''],
+                    ['  Loan Payment', '-Rp 10M', '-Rp 10M', '-Rp 10M', '-Rp 10M', '-Rp 10M', '-Rp 10M'],
+                    ['  Net Financing', '-Rp 10M', '-Rp 10M', '-Rp 10M', '-Rp 10M', '-Rp 10M', '-Rp 10M'],
+                    ['Net Cash Flow', 'Rp 25M', 'Rp 60M', 'Rp 50M', 'Rp 75M', 'Rp 82M', 'Rp 70M'],
+                    ['Cumulative CF', 'Rp 25M', 'Rp 85M', 'Rp 135M', 'Rp 210M', 'Rp 292M', 'Rp 362M']
+                ];
+            } else if (lower.includes('budget') || lower.includes('anggaran')) {
+                return [
+                    ['Department', 'Q1 Budget', 'Q2 Budget', 'Q3 Budget', 'Q4 Budget', 'Total'],
+                    ['Marketing', 'Rp 75.000.000', 'Rp 85.000.000', 'Rp 90.000.000', 'Rp 100.000.000', 'Rp 350.000.000'],
+                    ['Operations', 'Rp 120.000.000', 'Rp 125.000.000', 'Rp 130.000.000', 'Rp 135.000.000', 'Rp 510.000.000'],
+                    ['HR & Salary', 'Rp 200.000.000', 'Rp 210.000.000', 'Rp 220.000.000', 'Rp 230.000.000', 'Rp 860.000.000'],
+                    ['IT & Technology', 'Rp 50.000.000', 'Rp 55.000.000', 'Rp 60.000.000', 'Rp 65.000.000', 'Rp 230.000.000'],
+                    ['R&D', 'Rp 30.000.000', 'Rp 35.000.000', 'Rp 40.000.000', 'Rp 45.000.000', 'Rp 150.000.000'],
+                    ['Total', 'Rp 475.000.000', 'Rp 510.000.000', 'Rp 540.000.000', 'Rp 575.000.000', 'Rp 2.100.000.000'],
+                    ['% of Total', '22.6%', '24.3%', '25.7%', '27.4%', '100%']
+                ];
+            } else if (lower.includes('investment') || lower.includes('investasi')) {
+                return [
+                    ['Parameter', 'Project A', 'Project B', 'Project C', 'Project D', 'Project E'],
+                    ['Initial Investment', 'Rp 500M', 'Rp 750M', 'Rp 300M', 'Rp 1.200M', 'Rp 400M'],
+                    ['Year 1 Cash Flow', 'Rp 120M', 'Rp 180M', 'Rp 90M', 'Rp 250M', 'Rp 100M'],
+                    ['Year 2 Cash Flow', 'Rp 150M', 'Rp 220M', 'Rp 110M', 'Rp 300M', 'Rp 130M'],
+                    ['Year 3 Cash Flow', 'Rp 180M', 'Rp 260M', 'Rp 130M', 'Rp 350M', 'Rp 160M'],
+                    ['Year 4 Cash Flow', 'Rp 200M', 'Rp 300M', 'Rp 150M', 'Rp 400M', 'Rp 190M'],
+                    ['Year 5 Cash Flow', 'Rp 220M', 'Rp 340M', 'Rp 170M', 'Rp 450M', 'Rp 220M'],
+                    ['ROI (5yr)', '74%', '81%', '83%', '43%', '100%'],
+                    ['NPV (10%)', 'Rp 215M', 'Rp 287M', 'Rp 162M', 'Rp 185M', 'Rp 312M'],
+                    ['IRR', '18.5%', '19.2%', '22.1%', '12.8%', '26.3%'],
+                    ['Payback Period', '3.2 th', '3.5 th', '2.8 th', '4.1 th', '2.5 th'],
+                    ['Recommendation', '★★★', '★★★', '★★★★', '★★', '★★★★★']
+                ];
+            } else if (lower.includes('balance') || lower.includes('neraca')) {
+                return [
+                    ['Keterangan', '2025', '2026 (Estimasi)'],
+                    ['ASSETS', '', ''],
+                    ['  Current Assets', 'Rp 450.000.000', 'Rp 520.000.000'],
+                    ['  Fixed Assets', 'Rp 1.200.000.000', 'Rp 1.350.000.000'],
+                    ['  Other Assets', 'Rp 150.000.000', 'Rp 180.000.000'],
+                    ['Total Assets', 'Rp 1.800.000.000', 'Rp 2.050.000.000'],
+                    ['', '', ''],
+                    ['LIABILITIES', '', ''],
+                    ['  Current Liabilities', 'Rp 200.000.000', 'Rp 230.000.000'],
+                    ['  Long-term Debt', 'Rp 500.000.000', 'Rp 450.000.000'],
+                    ['Total Liabilities', 'Rp 700.000.000', 'Rp 680.000.000'],
+                    ['', '', ''],
+                    ['EQUITY', '', ''],
+                    ['  Share Capital', 'Rp 800.000.000', 'Rp 800.000.000'],
+                    ['  Retained Earnings', 'Rp 300.000.000', 'Rp 570.000.000'],
+                    ['Total Equity', 'Rp 1.100.000.000', 'Rp 1.370.000.000'],
+                    ['Total L+E', 'Rp 1.800.000.000', 'Rp 2.050.000.000']
+                ];
+            } else if (lower.includes('break even') || lower.includes('titik impas')) {
+                return [
+                    ['Parameter', 'Value'],
+                    ['Fixed Costs', 'Rp 50.000.000/bulan'],
+                    ['Variable Cost/Unit', 'Rp 25.000'],
+                    ['Selling Price/Unit', 'Rp 75.000'],
+                    ['Contribution Margin', 'Rp 50.000'],
+                    ['CM Ratio', '66.7%'],
+                    ['', ''],
+                    ['Break Even Point (Unit)', '1.000 unit'],
+                    ['Break Even Point (Rp)', 'Rp 75.000.000'],
+                    ['', ''],
+                    ['Volume Analysis', ''],
+                    ['  500 units', 'Loss: Rp 25.000.000'],
+                    ['  1.000 units', 'Break Even'],
+                    ['  1.500 units', 'Profit: Rp 25.000.000'],
+                    ['  2.000 units', 'Profit: Rp 50.000.000']
+                ];
+            }
+
+            // Default generic data
+            return [
+                ['Keterangan', 'Q1 2026', 'Q2 2026', 'Q3 2026', 'Q4 2026'],
+                ['Revenue', 'Rp 500.000.000', 'Rp 580.000.000', 'Rp 650.000.000', 'Rp 720.000.000'],
+                ['Expenses', 'Rp 350.000.000', 'Rp 380.000.000', 'Rp 410.000.000', 'Rp 440.000.000'],
+                ['Net Profit', 'Rp 150.000.000', 'Rp 200.000.000', 'Rp 240.000.000', 'Rp 280.000.000'],
+                ['Margin', '30%', '34.5%', '36.9%', '38.9%'],
+                ['Growth', '-', '16%', '12%', '10.8%']
+            ];
+        }
+
+        // Render Spreadsheet
+        function renderSpreadsheet(data) {
+            const tbody = document.getElementById('spreadsheetBody');
+            const thead = document.querySelector('#spreadsheetTable thead tr');
+
+            // Update headers
+            thead.innerHTML = '<th class="w-12 px-3 py-2 text-xs font-semibold text-dark-400 border-r border-dark-700/50 sticky left-0 bg-dark-800 z-10"></th>';
+            if (data.length > 0) {
+                const cols = data[0].length;
+                const colLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                for (let c = 0; c < Math.max(cols, 6); c++) {
+                    const letter = colLetters[c % 26] + (c >= 26 ? Math.floor(c / 26) : '');
+                    thead.innerHTML += `<th class="px-3 py-2 text-xs font-semibold text-dark-400 border-r border-dark-700/50 min-w-[140px]">${letter}</th>`;
+                }
+            }
+
+            // Render rows
+            tbody.innerHTML = '';
+            data.forEach((row, ri) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-dark-800/50 transition-colors';
+
+                const rowNum = document.createElement('td');
+                rowNum.className = 'px-3 py-1.5 text-xs text-dark-500 border-r border-dark-700/50 text-center sticky left-0 bg-dark-900/50 font-mono';
+                rowNum.textContent = ri + 1;
+                tr.appendChild(rowNum);
+
+                row.forEach((cell, ci) => {
+                    const td = document.createElement('td');
+                    td.className = 'px-3 py-1.5 text-sm border-r border-dark-700/50 cursor-pointer hover:bg-dark-700/30 transition-colors text-dark-200';
+                    td.textContent = cell;
+                    td.dataset.row = ri;
+                    td.dataset.col = ci;
+                    td.onclick = () => selectCell(ri, ci, td);
+
+                    // Header row styling
+                    if (ri === 0) {
+                        td.classList.add('font-semibold', 'text-dark-300');
+                        td.style.background = 'rgba(30, 41, 59, 0.5)';
+                    }
+                    // Total row styling
+                    if (typeof cell === 'string' && (cell.startsWith('Total') || cell.startsWith('Net') || cell.startsWith('EBITDA') || cell.startsWith('Cumulative'))) {
+                        td.classList.add('font-semibold', 'text-brand-300');
+                    }
+
+                    tr.appendChild(td);
+                });
+
+                // Fill empty cells
+                if (data.length > 0 && row.length < data[0].length) {
+                    for (let c = row.length; c < data[0].length; c++) {
+                        const td = document.createElement('td');
+                        td.className = 'px-3 py-1.5 text-sm border-r border-dark-700/50 cursor-pointer hover:bg-dark-700/30 transition-colors';
+                        td.textContent = '';
+                        td.dataset.row = ri;
+                        td.dataset.col = c;
+                        td.onclick = () => selectCell(ri, c, td);
+                        tr.appendChild(td);
+                    }
+                }
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        function selectCell(row, col, element) {
+            // Remove previous selection
+            document.querySelectorAll('.cell-edit').forEach(el => el.classList.remove('cell-edit'));
+            element.classList.add('cell-edit');
+            state.activeCell = { row, col };
+            const colLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const colLetter = colLetters[col % 26] + (col >= 26 ? Math.floor(col / 26) : '');
+            document.getElementById('activeCell').textContent = `${colLetter}${row + 1}`;
+            document.getElementById('cellFormula').value = state.spreadsheetData[row]?.[col] || '';
+        }
+
+        // Cell formula input handler
+        document.addEventListener('DOMContentLoaded', () => {
+            const formulaInput = document.getElementById('cellFormula');
+            formulaInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const { row, col } = state.activeCell;
+                    if (!state.spreadsheetData[row]) state.spreadsheetData[row] = [];
+                    state.spreadsheetData[row][col] = formulaInput.value;
+                    renderSpreadsheet(state.spreadsheetData);
+                    showToast('✅', 'Cell updated');
+                }
+            });
+        });
+
+        // Editor Actions
+        function editorAction(action) {
+            switch (action) {
+                case 'addRow':
+                    const lastRow = state.spreadsheetData[state.spreadsheetData.length - 1];
+                    const newRow = lastRow ? new Array(lastRow.length).fill('') : ['', '', '', '', ''];
+                    state.spreadsheetData.push(newRow);
+                    renderSpreadsheet(state.spreadsheetData);
+                    showToast('➕', 'Baris ditambahkan');
+                    break;
+                case 'addCol':
+                    state.spreadsheetData.forEach(row => row.push(''));
+                    renderSpreadsheet(state.spreadsheetData);
+                    showToast('➕', 'Kolom ditambahkan');
+                    break;
+                case 'deleteRow':
+                    if (state.spreadsheetData.length > 2) {
+                        state.spreadsheetData.pop();
+                        renderSpreadsheet(state.spreadsheetData);
+                        showToast('➖', 'Baris dihapus');
+                    }
+                    break;
+                case 'deleteCol':
+                    state.spreadsheetData.forEach(row => row.pop());
+                    renderSpreadsheet(state.spreadsheetData);
+                    showToast('➖', 'Kolom dihapus');
+                    break;
+                case 'formula':
+                    showToast('Σ', 'Formula mode aktif - gunakan cell formula bar');
+                    document.getElementById('cellFormula').focus();
+                    break;
+                default:
+                    showToast('📝', `Action: ${action}`);
+            }
+        }
+
+        // History
+        function addHistory(prompt) {
+            const entry = {
+                id: Date.now(),
+                prompt: prompt.substring(0, 80) + (prompt.length > 80 ? '...' : ''),
+                fullPrompt: prompt,
+                timestamp: new Date().toLocaleString(),
+                tokensUsed: 2
+            };
+            state.history.unshift(entry);
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('generationList');
+            const histList = document.getElementById('historyList');
+            document.getElementById('historyCount').textContent = state.history.length;
+
+            const html = state.history.map(h => `
+                <div class="glass-light rounded-xl p-4 hover:border-brand-500/30 transition-all cursor-pointer group" onclick="loadFromHistory(${h.id})">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-dark-200 group-hover:text-white transition-colors">${h.prompt}</p>
+                            <div class="flex items-center gap-3 mt-2">
+                                <span class="text-xs text-dark-500">${h.timestamp}</span>
+                                <span class="text-xs text-amber-400/60">-${h.tokensUsed} token</span>
+                            </div>
+                        </div>
+                        <svg class="w-5 h-5 text-dark-600 group-hover:text-brand-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                </div>
+            `).join('');
+
+            if (list) list.innerHTML = html || '<p class="text-sm text-dark-500 text-center py-4">Belum ada generasi</p>';
+            if (histList) {
+                histList.innerHTML = state.history.length > 0 ? state.history.map(h => `
+                    <div class="glass-light rounded-xl p-4 hover:border-brand-500/30 transition-all">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-dark-200">${h.prompt}</p>
+                                <p class="text-xs text-dark-500 mt-1">${h.timestamp}</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="loadFromHistory(${h.id})" class="p-2 rounded-lg hover:bg-dark-700 text-dark-400 hover:text-white transition-colors" title="Load">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                </button>
+                                <button onclick="deleteHistory(${h.id})" class="p-2 rounded-lg hover:bg-dark-700 text-dark-400 hover:text-red-400 transition-colors" title="Delete">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('') : `
+                    <div class="text-center py-16">
+                        <svg class="w-16 h-16 mx-auto text-dark-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <p class="text-dark-500">Belum ada riwayat generasi</p>
+                    </div>
+                `;
+            }
+        }
+
+        function loadFromHistory(id) {
+            const entry = state.history.find(h => h.id === id);
+            if (entry) {
+                const data = generateMockData(entry.fullPrompt);
+                state.spreadsheetData = data;
+                renderSpreadsheet(data);
+                switchTab('editor');
+                showToast('📋', 'Data dimuat dari history');
+            }
+        }
+
+        function deleteHistory(id) {
+            state.history = state.history.filter(h => h.id !== id);
+            renderHistory();
+            showToast('🗑️', 'History dihapus');
+        }
+
+        // AI Brain
+        function generateBrainAnalysis() {
+            if (!useTokens(1)) return;
+            if (!state.spreadsheetData || state.spreadsheetData.length === 0) {
+                showToast('⚠️', 'Generate spreadsheet terlebih dahulu');
+                return;
+            }
+
+            showToast('🧠', 'AI Brain sedang menganalisis...');
+
+            setTimeout(() => {
+                // Best Choice
+                document.getElementById('bestChoiceText').textContent = 'Berdasarkan analisis data, Project E menunjukkan performa terbaik dengan ROI 100% dan IRR 26.3%. Rekomendasi alokasi budget maksimal untuk Project E diikuti Project C.';
+                document.getElementById('scoreBar').style.width = '92%';
+                document.getElementById('scoreValue').textContent = '92%';
+
+                // Risk Items
+                document.getElementById('riskItems').innerHTML = `
+                    <div class="flex items-start gap-2">
+                        <span class="text-amber-400 mt-0.5">⚠</span>
+                        <p class="text-xs text-dark-300">Cash flow bulan Apr-Jun menunjukkan penurunan 15% dari trend</p>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="text-amber-400 mt-0.5">⚠</span>
+                        <p class="text-xs text-dark-300">Operating expense meningkat 8% quarter-over-quarter</p>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="text-red-400 mt-0.5">🔴</span>
+                        <p class="text-xs text-dark-300">Debt-to-equity ratio mendekati 0.5 - perlu monitoring</p>
+                    </div>
+                `;
+
+                // Optimization Items
+                document.getElementById('optimizationItems').innerHTML = `
+                    <div class="flex items-start gap-2">
+                        <span class="text-brand-400 mt-0.5">💡</span>
+                        <p class="text-xs text-dark-300">Realokasi 10% budget marketing ke R&D bisa meningkatkan ROI 12%</p>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="text-brand-400 mt-0.5">💡</span>
+                        <p class="text-xs text-dark-300">Negosiasi vendor bisa mengurangi COGS hingga 5%</p>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <span class="text-emerald-400 mt-0.5">🚀</span>
+                        <p class="text-xs text-dark-300">Revenue growth stabil di 10-16% - pertahankan momentum</p>
+                    </div>
+                `;
+
+                // Add chat message
+                addBrainMessage('ai', 'Analisis selesai! Saya menemukan bahwa **Project E** adalah pilihan terbaik dengan ROI 100% dan payback period tercepat (2.5 tahun). Ada beberapa area risiko yang perlu diperhatikan, terutama peningkatan operating expense. Saya juga memberikan 3 rekomendasi optimasi yang bisa meningkatkan profitabilitas hingga 17%.');
+            }, 1500);
+        }
+
+        function askBrain() {
+            const input = document.getElementById('brainInput');
+            const question = input.value.trim();
+            if (!question) return;
+
+            if (!useTokens(1)) return;
+
+            addBrainMessage('user', question);
+            input.value = '';
+
+            setTimeout(() => {
+                const responses = [
+                    'Berdasarkan data spreadsheet Anda, revenue menunjukkan tren positif dengan growth rata-rata 12% per quarter. Saya merekomendasikan untuk mempertahankan strategi saat ini sambil meningkatkan efisiensi operasional.',
+                    'Analisis menunjukkan net margin Anda di kisaran 19-20%, yang baik untuk industri ini. Untuk meningkatkan margin ke 25%, fokus pada pengurangan COGS dan optimasi pricing strategy.',
+                    'Dari data yang ada, break even point tercapai di 1.000 unit per bulan. Dengan volume saat ini, Anda sudah berada di zona profit. Pertimbangkan ekspasi ke 1.500 unit untuk memaksimalkan profit.',
+                    'Cash flow Anda sehat dengan cumulative positive Rp 362M di H1 2026. Saya menyarankan alokasi 30% surplus untuk reinvestment dan 20% untuk emergency fund.',
+                ];
+                const resp = responses[Math.floor(Math.random() * responses.length)];
+                addBrainMessage('ai', resp);
+            }, 1000);
+        }
+
+        function addBrainMessage(type, text) {
+            const chat = document.getElementById('brainChat');
+            const div = document.createElement('div');
+            div.className = 'flex gap-3 animate-slide-up';
+
+            if (type === 'user') {
+                div.innerHTML = `
+                    <div class="flex-1"></div>
+                    <div class="glass rounded-xl p-3 max-w-lg bg-brand-500/10 border-brand-500/20">
+                        <p class="text-sm text-dark-200">${text}</p>
+                    </div>
+                    <div class="w-8 h-8 rounded-lg bg-dark-700 flex items-center justify-center flex-shrink-0">
+                        <span class="text-sm">U</span>
+                    </div>
+                `;
+            } else {
+                div.innerHTML = `
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-brand-500 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                    </div>
+                    <div class="glass rounded-xl p-3 max-w-lg">
+                        <p class="text-sm text-dark-200">${text}</p>
+                    </div>
+                `;
+            }
+
+            chat.appendChild(div);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        // Export
+        function showExportModal() {
+            document.getElementById('exportModal').classList.remove('hidden');
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.add('hidden');
+        }
+
+        function exportData(format) {
+            if (!state.spreadsheetData || state.spreadsheetData.length === 0) {
+                showToast('⚠️', 'Tidak ada data untuk di-export');
+                return;
+            }
+
+            let content, filename, mime;
+
+            switch (format) {
+                case 'csv':
+                    content = state.spreadsheetData.map(row => row.join(',')).join('\n');
+                    filename = `finai_export_${Date.now()}.csv`;
+                    mime = 'text/csv';
+                    break;
+                case 'json':
+                    content = JSON.stringify(state.spreadsheetData, null, 2);
+                    filename = `finai_export_${Date.now()}.json`;
+                    mime = 'application/json';
+                    break;
+                case 'xlsx':
+                    // Simulate XLSX export (CSV with .xlsx extension for demo)
+                    content = state.spreadsheetData.map(row => row.join('\t')).join('\n');
+                    filename = `finai_export_${Date.now()}.xlsx`;
+                    mime = 'application/vnd.ms-excel';
+                    break;
+                case 'pdf':
+                    content = state.spreadsheetData.map(row => row.join(' | ')).join('\n');
+                    filename = `finai_export_${Date.now()}.txt`;
+                    mime = 'text/plain';
+                    showToast('📄', 'PDF export memerlukan server-side processing. Data ditampilkan sebagai text.');
+                    break;
+            }
+
+            const blob = new Blob([content], { type: mime });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            closeExportModal();
+            showToast('✅', `File ${format.toUpperCase()} berhasil di-export!`);
+        }
+
+        // Upgrade Modal
+        function showUpgradeModal() {
+            document.getElementById('upgradeModal').classList.remove('hidden');
+        }
+
+        function closeUpgradeModal() {
+            document.getElementById('upgradeModal').classList.add('hidden');
+        }
+
+        function selectPlan(plan) {
+            const plans = { starter: 100, pro: 500, enterprise: 9999 };
+            closeUpgradeModal();
+            state.tokens += plans[plan] || 100;
+            state.maxTokens = Math.max(state.maxTokens, state.tokens);
+            updateTokenDisplay();
+            showToast('🎉', `Plan ${plan.toUpperCase()} activated! +${plans[plan]} tokens added`);
+        }
+
+        function closeNoTokensModal() {
+            document.getElementById('noTokensModal').classList.add('hidden');
+        }
+
+        // Toast
+        function showToast(icon, message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastIcon').textContent = icon;
+            document.getElementById('toastMessage').textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Loading State
+        function showLoadingState() {
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Generating...';
+        }
+
+        function hideLoadingState() {
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = false;
+            btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Generate';
+        }
+
+        // Attach file (simulated)
+        function attachFile() {
+            showToast('📎', 'File upload akan tersedia di versi Pro');
+        }
+
+        // Notifications
+        function showNotifications() {
+            showToast('🔔', 'Anda memiliki 2 notifikasi baru');
+        }
+
+        // Init spreadsheet with empty data
+        function initSpreadsheet() {
+            state.spreadsheetData = [
+                ['Keterangan', 'Jan 2026', 'Feb 2026', 'Mar 2026'],
+                ['', '', '', ''],
+                ['', '', '', ''],
+                ['', '', '', ''],
+            ];
+            renderSpreadsheet(state.spreadsheetData);
+            renderHistory();
+        }
+    </script>
+</body>
+</html>
+
