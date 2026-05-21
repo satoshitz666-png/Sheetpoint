@@ -1,0 +1,210 @@
+1. CORE DATABASE ARCHITECTURE
+ 1. Users & Authentication
+users (
+  id UUID PRIMARY KEY,
+  name VARCHAR,
+  email VARCHAR UNIQUE,
+  password_hash TEXT,
+  role ENUM('user','admin'),
+  is_verified BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP
+)
+user_profiles (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  company_name VARCHAR,
+  industry VARCHAR,
+  use_case TEXT,
+  onboarding_completed BOOLEAN DEFAULT FALSE
+)
+2. Credit / Token System (Core Monetization)
+user_credits (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  total_credits INT DEFAULT 30,
+  used_credits INT DEFAULT 0,
+  remaining_credits INT GENERATED ALWAYS AS (total_credits - used_credits) STORED,
+  last_updated TIMESTAMP
+)
+credit_transactions (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  type ENUM('usage','topup','bonus'),
+  amount INT,
+  description TEXT,
+  created_at TIMESTAMP
+)
+3. Projects (Core Workspace)
+projects (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  title VARCHAR,
+  description TEXT,
+  project_type ENUM('financial_model','tokenomics','treasury','budgeting','custom'),
+  status ENUM('draft','generated','approved'),
+  created_at TIMESTAMP,
+  updated_at TIMESTAMP
+)
+4. AI Prompt Engine
+prompts (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  project_id UUID REFERENCES projects(id),
+  input_prompt TEXT,
+  ai_model VARCHAR,
+  tokens_used INT,
+  status ENUM('processing','completed','failed'),
+  created_at TIMESTAMP
+)
+prompt_outputs (
+  id UUID PRIMARY KEY,
+  prompt_id UUID REFERENCES prompts(id),
+  output_type ENUM('table','text','chart','excel'),
+  content JSONB,
+  version INT DEFAULT 1,
+  is_approved BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP
+)
+5. Spreadsheet Engine (Core Differentiator)
+spreadsheets (
+  id UUID PRIMARY KEY,
+  project_id UUID REFERENCES projects(id),
+  name VARCHAR,
+  structure JSONB, -- columns, formulas, config
+  created_at TIMESTAMP
+)
+spreadsheet_cells (
+  id UUID PRIMARY KEY,
+  spreadsheet_id UUID REFERENCES spreadsheets(id),
+  row_index INT,
+  column_index INT,
+  value TEXT,
+  formula TEXT,
+  updated_at TIMESTAMP
+)
+6. Financial Models / AI Output Layer
+financial_models (
+  id UUID PRIMARY KEY,
+  project_id UUID REFERENCES projects(id),
+  model_type ENUM('roi','valuation','forecast','tokenomics'),
+  assumptions JSONB,
+  results JSONB,
+  created_at TIMESTAMP
+)
+financial_models (
+  id UUID PRIMARY KEY,
+  project_id UUID REFERENCES projects(id),
+  model_type ENUM('roi','valuation','forecast','tokenomics'),
+  assumptions JSONB,
+  results JSONB,
+  created_at TIMESTAMP
+)
+7. Export System
+exports (
+  id UUID PRIMARY KEY,
+  project_id UUID REFERENCES projects(id),
+  user_id UUID REFERENCES users(id),
+  export_type ENUM('pdf','excel','csv'),
+  file_url TEXT,
+  created_at TIMESTAMP
+)
+8. Subscription / Billing (Optional Scaling)
+subscriptions (
+  id UUID PRIMARY KEY,
+  user_id UUID REFERENCES users(id),
+  plan ENUM('free','pro','enterprise'),
+  credits_per_month INT,
+  status ENUM('active','cancelled'),
+  started_at TIMESTAMP,
+  expired_at TIMESTAMP
+)
+2. RELATIONSHIP (ERD FLOW)
+
+User → Projects → Prompts → Output → Spreadsheet → Export
+User
+ ├── User Credits
+ ├── Projects
+ │     ├── Prompts
+ │     │     └── Prompt Outputs
+ │     ├── Spreadsheets
+ │     │     └── Cells
+ │     ├── Financial Models
+ │     └── Exports
+ └── Subscriptions
+3. SYSTEM LOGIC FLOW (BACKEND PERSPECTIVE)
+ AI Prompt Execution Flow
+User input prompt
+System check:
+Credit tersedia?
+Deduct credit
+Send ke AI engine (LLM API)
+Save ke prompts
+Generate output → prompt_outputs
+Convert ke:
+Spreadsheet
+Chart
+Financial model
+
+Credit Logic
+IF remaining_credit > 0:
+   allow_prompt()
+   deduct_credit(1-5 based on complexity)
+ELSE:
+   block + show upgrade CTA
+
+Spreadsheet Logic
+AI output → JSON
+JSON → structured table
+Editable manual oleh user
+Bisa:
+Edit formula
+Override data
+Re-run AI
+
+4. ADVANCED MODULE (RECOMMENDED)
+ AI Recommendation Engine
+ai_recommendations (
+  id UUID PRIMARY KEY,
+  project_id UUID,
+  recommendation TEXT,
+  confidence_score FLOAT,
+  created_at TIMESTAMP
+)
+Scenario Simulation
+scenarios (
+  id UUID PRIMARY KEY,
+  project_id UUID,
+  name VARCHAR,
+  variables JSONB,
+  results JSONB
+)
+
+Collaboration (Future)
+project_collaborators (
+  id UUID PRIMARY KEY,
+  project_id UUID,
+  user_id UUID,
+  role ENUM('viewer','editor','owner')
+)
+5. TECH STACK RECOMMENDATION
+
+Database
+
+PostgreSQL (Highly recommended)
+Supabase (faster dev)
+
+Backend
+
+Node.js (NestJS / Express)
+Prisma ORM
+
+AI Engine
+
+OpenAI / Claude / Local LLM
+
+Realtime
+
+WebSocket / Supabase Realtime
+
+
