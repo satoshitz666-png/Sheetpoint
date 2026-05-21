@@ -1,0 +1,260 @@
+1. SYSTEM ARCHITECTURE (NEXT.JS FULLSTACK)
+ Arsitektur Modern (Next.js App Router)
+SheetPoint System
+
+Frontend (Next.js)
+│
+├── UI Layer (Dashboard, Prompt, Spreadsheet)
+├── State (React Query / Zustand)
+│
+├── API Routes (Next.js /api/*)
+│     ├── auth
+│     ├── projects
+│     ├── prompt
+│     ├── spreadsheet
+│     ├── export
+│     └── credits
+│
+├── Services Layer
+│     ├── aiService (OpenAI)
+│     ├── dbService (PostgreSQL)
+│     ├── creditService
+│     └── parserService
+│
+└── Database (PostgreSQL)
+
+ 2. FOLDER STRUCTURE (NEXT.JS)
+/app
+  /dashboard
+  /project
+  /login
+
+/app/api
+  /auth/route.js
+  /projects/route.js
+  /prompt/route.js
+  /spreadsheet/route.js
+  /export/route.js
+  /credits/route.js
+
+/lib
+  aiService.js
+  db.js
+  creditService.js
+  parser.js
+
+/types
+  index.ts
+
+3. CORE API DOCUMENTATION
+ AUTH API
+ POST /api/auth/login
+Request
+{
+  "email": "user@email.com",
+  "password": "123456"
+}
+Response
+{
+  "success": true,
+  "token": "jwt_token_here",
+  "user": {
+    "id": "uuid",
+    "email": "user@email.com"
+  }
+}
+
+PROJECT API
+ POST /api/projects
+{
+  "title": "Financial Model Startup",
+  "type": "financial_model"
+}
+Response
+{
+  "success": true,
+  "project": {
+    "id": "uuid",
+    "title": "Financial Model Startup"
+  }
+}
+
+GET /api/projects
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "title": "Project A",
+      "created_at": "2026-01-01"
+    }
+  ]
+}
+
+AI PROMPT API (CORE)
+ POST /api/prompt
+Request
+{
+  "projectId": "uuid",
+  "input": "Buatkan proyeksi bisnis 5 tahun dengan ROI"
+}
+Response
+{
+  "success": true,
+  "data": {
+    "promptId": "uuid",
+    "result": {
+      "summary": "Business growth projection",
+      "table": [
+        {
+          "year": 1,
+          "revenue": 100000,
+          "cost": 50000,
+          "profit": 50000
+        }
+      ],
+      "insights": [
+        "Revenue increases annually",
+        "Profit margin stabil"
+      ],
+      "recommendation": "Scale marketing di tahun ke-2"
+    }
+  }
+}
+ 
+SPREADSHEET API
+➤ POST /api/spreadsheet
+{
+  "projectId": "uuid",
+  "name": "Financial Table",
+  "data": [
+    {
+      "row": 1,
+      "col": 1,
+      "value": "Revenue"
+    }
+  ]
+}
+➤ GET /api/spreadsheet/:projectId
+{
+  "success": true,
+  "data": {
+    "columns": ["Year", "Revenue", "Cost"],
+    "rows": [
+      [1, 100000, 50000]
+    ]
+  }
+}
+
+CREDIT API
+ GET /api/credits
+{
+  "total": 30,
+  "used": 10,
+  "remaining": 20
+}
+
+EXPORT API
+ POST /api/export
+{
+  "projectId": "uuid",
+  "type": "pdf"
+}
+Response
+{
+  "success": true,
+  "fileUrl": "https://cdn.sheetpoint.com/export/file.pdf"
+}
+
+ 4. NEXT.JS API IMPLEMENTATION (REAL CODE)
+ /app/api/prompt/route.js
+import { NextResponse } from "next/server";
+import { runAI } from "@/lib/aiExecutor";
+
+export async function POST(req) {
+  try {
+    const body = await req.json();
+    const { userId, projectId, input } = body;
+
+    const result = await runAI(userId, projectId, input);
+
+    return NextResponse.json({
+      success: true,
+      data: result
+    });
+
+  } catch (err) {
+    return NextResponse.json({
+      success: false,
+      message: err.message
+    }, { status: 400 });
+  }
+}
+
+5. AI SERVICE (NEXT.JS)
+// lib/aiService.js
+
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+export async function generateAI(prompt) {
+  const response = await client.chat.completions.create({
+    model: "gpt-4.1-mini",
+    messages: [
+      {
+        role: "system",
+        content: "You are financial AI. Output JSON only."
+      },
+      {
+        role: "user",
+        content: prompt
+      }
+    ]
+  });
+
+  return response.choices[0].message.content;
+}
+
+6. END-TO-END FLOW (REAL)
+Frontend (Next.js)
+   ↓
+POST /api/prompt
+   ↓
+API Route Handler
+   ↓
+runAI()
+   ↓
+Check Credit
+   ↓
+OpenAI API
+   ↓
+Save DB
+   ↓
+Return JSON
+   ↓
+Render Table UI
+
+7. TYPES (IMPORTANT)
+// types/index.ts
+
+export interface AIResponse {
+  summary: string;
+  table: any[];
+  insights: string[];
+  recommendation: string;
+}
+
+8. BONUS (PRO FEATURE API)
+ Scenario Simulation
+{
+  "scenario": "bull_case",
+  "growth_rate": 20
+}
+➤ AI Re-run
+{
+  "promptId": "uuid",
+  "adjustment": "increase revenue 10%"
+}
