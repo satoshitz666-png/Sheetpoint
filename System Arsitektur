@@ -1,0 +1,221 @@
+1. HIGH LEVEL ARCHITECTURE
+┌───────────────────────────────┐
+│        FRONTEND (CLIENT)      │
+│  Next.js / React Dashboard    │
+└───────────────┬───────────────┘
+                │ API Request (HTTPS)
+                ▼
+┌───────────────────────────────┐
+│        API GATEWAY            │
+│  (Auth, Rate Limit, Routing)  │
+└───────────────┬───────────────┘
+                ▼
+┌───────────────────────────────┐
+│        BACKEND (CORE)         │
+│  Node.js (NestJS / Express)   │
+└───────┬───────────┬───────────┘
+        │           │
+        ▼           ▼
+┌─────────────┐   ┌────────────────┐
+│ AI SERVICE  │   │ BUSINESS LOGIC │
+│ (OpenAI)    │   │ (Core Engine)  │
+└──────┬──────┘   └──────┬─────────┘
+       │                 │
+       ▼                 ▼
+┌────────────────────────────────┐
+│        DATABASE (PostgreSQL)   │
+│ Users / Projects / Credits     │
+└────────────────────────────────┘
+
+        ▼
+┌───────────────────────────────┐
+│   STORAGE (S3 / Cloudinary)   │
+│   Export File (PDF / Excel)   │
+└───────────────────────────────┘
+
+Frontend Modules
+Frontend/
+├── Auth (Login/Register)
+├── Dashboard
+├── Project Workspace
+├── Prompt Input UI
+├── Spreadsheet Editor
+├── AI Result Viewer
+├── Export Manager
+├── Billing / Credit UI
+
+Frontend Flow
+User Login
+ → Dashboard
+ → Create Project
+ → Input Prompt
+ → Loading AI
+ → Show Result (Table + Insight)
+ → Edit Spreadsheet
+ → Export
+
+3. BACKEND ARCHITECTURE
+ Core Layer
+Backend/
+├── Controllers (API)
+├── Services (Logic)
+├── AI Engine
+├── Credit System
+├── Export Engine
+├── Auth Middleware
+
+API STRUCTURE
+/api/auth
+/api/projects
+/api/prompt
+/api/spreadsheet
+/api/export
+/api/credits
+ 
+Backend Flow (REAL)
+POST /prompt
+   ↓
+Check JWT Auth
+   ↓
+Check Credit
+   ↓
+Build Prompt
+   ↓
+Send to OpenAI
+   ↓
+Save Output
+   ↓
+Return JSON
+
+4. AI ENGINE ARCHITECTURE
+ AI Layer
+AI Engine/
+├── Prompt Builder
+├── AI Connector (OpenAI)
+├── Response Parser
+├── Financial Model Generator
+
+AI FLOW
+User Prompt
+ → Prompt Builder
+ → OpenAI API
+ → JSON Output
+ → Parser
+ → Save DB
+ → Send to UI
+ AI OUTPUT STRUCTURE
+{
+  "summary": "Business overview",
+  "table": [
+    {"year": 1, "revenue": 10000, "profit": 3000}
+  ],
+  "insights": ["Revenue grows 20% YoY"],
+  "recommendation": "Increase pricing strategy"
+}
+
+5. DATABASE ARCHITECTURE (POSTGRESQL)
+ Core Tables
+users
+user_credits
+projects
+prompts
+prompt_outputs
+spreadsheets
+spreadsheet_cells
+financial_models
+exports
+subscriptions
+ Data Flow
+User
+ → Project
+ → Prompt
+ → AI Output
+ → Spreadsheet
+ → Export
+
+6. CREDIT SYSTEM FLOW
+User Action
+   ↓
+Check Remaining Credit
+   ↓
+IF OK → Run AI
+   ↓
+Deduct Credit
+   ↓
+Save Transaction
+
+7. SPREADSHEET ENGINE
+ Logic
+AI JSON Output
+   ↓
+Convert → Table
+   ↓
+Render UI Grid
+   ↓
+Editable Cells
+   ↓
+Save Changes
+
+8. EXPORT ENGINE
+Spreadsheet Data
+   ↓
+Generate File (PDF / Excel)
+   ↓
+Upload to Storage (S3)
+   ↓
+Return URL
+
+9. INFRASTRUCTURE (PRODUCTION)
+ Deployment Stack
+Frontend → Vercel
+Backend → AWS EC2 / Railway
+Database → Supabase / RDS
+Storage → AWS S3
+AI → OpenAI API
+
+Scaling Layer
++ Redis (Caching)
++ Queue (BullMQ / Kafka)
++ CDN (Cloudflare)
++ Load Balancer
+
+10. SECURITY ARCHITECTURE
+JWT Authentication
+HTTPS (SSL)
+Rate limiting
+Input validation
+API key protection
+
+11. REAL SYSTEM FLOW (END-TO-END)
+User (Frontend)
+   ↓
+API Request
+   ↓
+Auth Middleware
+   ↓
+Credit Check
+   ↓
+AI Processing
+   ↓
+Database Save
+   ↓
+Response → UI
+   ↓
+User Edit / Export
+ 12. ADVANCED (NEXT LEVEL)
+ AI AGENT MODE
+
+Future upgrade:
+
+User: "Build 5-year financial model"
+
+AI:
+ → Generate model
+ → Adjust assumptions
+ → Simulate scenarios
+ → Give decision
+
+REALTIME COLLABORATION
+WebSocket
+Multi-user editing
+Live spreadsheet sync
