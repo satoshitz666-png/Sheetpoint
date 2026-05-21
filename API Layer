@@ -1,0 +1,202 @@
+. INSTALL DEPENDENCIES
+npm install openai dotenv axios
+
+2. ENV CONFIG
+OPENAI_API_KEY=your_openai_api_key
+AI_MODEL=gpt-4.1-mini
+
+3. AI SERVICE (CORE ENGINE)
+// services/aiService.js
+
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+export async function generateAIResponse(prompt) {
+  try {
+    const response = await client.chat.completions.create({
+      model: process.env.AI_MODEL,
+      messages: [
+        {
+          role: "system",
+          content: `
+You are SheetPoint AI — a financial modeling and decision engine.
+
+Output format MUST be JSON:
+{
+  "summary": "...",
+  "table": [...],
+  "insights": [...],
+  "recommendation": "..."
+}
+          `,
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0.7,
+    });
+
+    return response.choices[0].message.content;
+
+  } catch (error) {
+    console.error("AI ERROR:", error);
+    throw error;
+  }
+}
+4. PROMPT ENGINE (SMART TEMPLATE)
+// services/promptBuilder.js
+
+export function buildFinancialPrompt(userInput) {
+  return `
+User request:
+"${userInput}"
+
+Generate:
+1. Financial table (structured)
+2. ROI analysis
+3. Key insights
+4. Recommendation
+
+Format in JSON only.
+`;
+}
+
+5. CREDIT CHECK + AI EXECUTION
+// services/aiExecutor.js
+
+import { generateAIResponse } from "./aiService.js";
+import { buildFinancialPrompt } from "./promptBuilder.js";
+import db from "../db/index.js";
+
+export async function runAI(userId, projectId, userInput) {
+  
+  // 1. Check credit
+  const credit = await db.query(
+    `SELECT total_credits - used_credits AS remaining 
+     FROM user_credits WHERE user_id = $1`,
+    [userId]
+  );
+
+  if (credit.rows[0].remaining <= 0) {
+    throw new Error("Insufficient credits");
+  }
+
+  // 2. Build prompt
+  const prompt = buildFinancialPrompt(userInput);
+
+  // 3. Save prompt
+  const promptData = await db.query(
+    `INSERT INTO prompts(user_id, project_id, input_prompt, ai_model, status)
+     VALUES ($1,$2,$3,$4,'processing')
+     RETURNING id`,
+    [userId, projectId, userInput, process.env.AI_MODEL]
+  );
+
+  const promptId = promptData.rows[0].id;
+
+  // 4. Call AI
+  const aiResult = await generateAIResponse(prompt);
+
+  // 5. Save output
+  await db.query(
+    `INSERT INTO prompt_outputs(prompt_id, output_type, content)
+     VALUES ($1,'json',$2)`,
+    [promptId, aiResult]
+  );
+
+  // 6. Deduct credit
+  await db.query(
+    `UPDATE user_credits 
+     SET used_credits = used_credits + 1
+     WHERE user_id = $1`,
+    [userId]
+  );
+
+  return {
+    promptId,
+    result: aiResult
+  };
+}
+6. API ENDPOINT (USER PROMPT)
+// routes/aiRoutes.js
+
+import express from "express";
+import { runAI } from "../services/aiExecutor.js";
+
+const router = express.Router();
+
+router.post("/prompt", async (req, res) => {
+  try {
+    const { userId, projectId, input } = req.body;
+
+    const result = await runAI(userId, projectId, input);
+
+    res.json({
+      success: true,
+      data: result
+    });
+
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
+export default router;
+
+7. AUTO CONVERT → SPREADSHEET
+
+Tambahkan parser supaya output AI langsung jadi tabel:
+// utils/aiParser.js
+
+export function parseAIToTable(aiJson) {
+  try {
+    const data = JSON.parse(aiJson);
+
+    return data.table || [];
+
+  } catch (err) {
+    return [];
+  }
+}
+
+8. ADVANCED (RECOMMENDED UPGRADE)
+ Streaming Response (Realtime UX)
+stream: true
+Function Calling (SUPER POWER)
+
+AI langsung output struktur:
+{
+  "name": "generate_financial_model",
+  "arguments": {
+    "revenue": [],
+    "cost": [],
+    "roi": 25
+  }
+}
+
+9. FLOW FINAL (REAL PRODUCT)
+User Prompt
+   ↓
+API /prompt
+   ↓
+Check Credit
+   ↓
+Build Prompt
+   ↓
+OpenAI API
+   ↓
+Save Output (JSON)
+   ↓
+Convert → Table
+   ↓
+Render UI (Spreadsheet)
+   ↓
+Export (PDF/Excel)
