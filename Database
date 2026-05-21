@@ -1,0 +1,229 @@
+1. EXTENSIONS (WAJIB)
+-- UUID generator
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- JSON optimization (optional but recommended)
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+2. USERS & AUTH
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(150),
+  email VARCHAR(150) UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role VARCHAR(20) DEFAULT 'user',
+  is_verified BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_users_email ON users(email);
+
+CREATE TABLE user_profiles (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  company_name VARCHAR(150),
+  industry VARCHAR(100),
+  use_case TEXT,
+
+3. CREDIT SYSTEM (CORE MONETIZATION)
+CREATE TABLE user_credits (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  total_credits INT DEFAULT 30,
+  used_credits INT DEFAULT 0,
+  last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- View untuk hitung remaining credit
+CREATE VIEW user_credit_balance AS
+SELECT 
+  user_id,
+  total_credits,
+  used_credits,
+  (total_credits - used_credits) AS remaining_credits
+FROM user_credits;
+
+CREATE TABLE credit_transactions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  type VARCHAR(20), -- usage / topup / bonus
+  amount INT,
+  description TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_credit_user ON credit_transactions(user_id);
+
+4. PROJECT SYSTEM
+CREATE TABLE projects (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(200),
+  description TEXT,
+  project_type VARCHAR(50),
+  status VARCHAR(20) DEFAULT 'draft',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_projects_user ON projects(user_id);
+
+5. AI PROMPT ENGINE
+CREATE TABLE prompts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+  input_prompt TEXT,
+  ai_model VARCHAR(50),
+  tokens_used INT DEFAULT 0,
+  status VARCHAR(20) DEFAULT 'processing',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_prompts_project ON prompts(project_id);
+
+CREATE TABLE prompt_outputs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  prompt_id UUID REFERENCES prompts(id) ON DELETE CASCADE,
+  output_type VARCHAR(20), -- table/text/chart/excel
+  content JSONB,
+  version INT DEFAULT 1,
+  is_approved BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_outputs_prompt ON prompt_outputs(prompt_id);
+
+6. SPREADSHEET ENGINE
+CREATE TABLE spreadsheets (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+  name VARCHAR(150),
+  structure JSONB,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE spreadsheet_cells (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  spreadsheet_id UUID REFERENCES spreadsheets(id) ON DELETE CASCADE,
+  row_index INT,
+  column_index INT,
+  value TEXT,
+  formula TEXT,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_cells_sheet ON spreadsheet_cells(spreadsheet_id);
+
+7. FINANCIAL ENGINE
+CREATE TABLE financial_models (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+  model_type VARCHAR(50),
+  assumptions JSONB,
+  results JSONB,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+8. EXPORT SYSTEM
+CREATE TABLE exports (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  export_type VARCHAR(20),
+  file_url TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+9. SUBSCRIPTION (SCALING)
+CREATE TABLE subscriptions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  plan VARCHAR(20), -- free / pro / enterprise
+  credits_per_month INT,
+  status VARCHAR(20),
+  started_at TIMESTAMP,
+  expired_at TIMESTAMP
+);
+
+10. ADVANCED AI LAYER
+AI Recommendation
+CREATE TABLE ai_recommendations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+  recommendation TEXT,
+  confidence_score FLOAT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+Scenario Simulation
+CREATE TABLE scenarios (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
+  name VARCHAR(100),
+  variables JSONB,
+  results JSONB
+);
+
+11. BUSINESS LOGIC (IMPORTANT)
+ Auto Deduct Credit Function
+CREATE OR REPLACE FUNCTION deduct_credit(p_user_id UUID, p_amount INT)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE user_credits
+  SET used_credits = used_credits + p_amount,
+      last_updated = CURRENT_TIMESTAMP
+  WHERE user_id = p_user_id;
+
+  INSERT INTO credit_transactions(user_id, type, amount, description)
+  VALUES (p_user_id, 'usage', p_amount, 'AI prompt usage');
+END;
+$$ LANGUAGE plpgsql;
+
+Check Credit Before Prompt
+CREATE OR REPLACE FUNCTION check_credit(p_user_id UUID)
+RETURNS BOOLEAN AS $$
+DECLARE remaining INT;
+BEGIN
+  SELECT (total_credits - used_credits)
+  INTO remaining
+  FROM user_credits
+  WHERE user_id = p_user_id;
+
+  IF remaining > 0 THEN
+    RETURN TRUE;
+  ELSE
+    RETURN FALSE;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+12. READY FOR SCALE (IMPORTANT)
+Tambahkan ini jika production:
+Partition table untuk:
+prompts
+credit_transactions
+Redis caching:
+credit check
+prompt result
+Queue system:
+AI processing (BullMQ / Kafka)
+
+13. ARSITEKTUR FINAL (BACKEND FLOW)
+Frontend (React / Next.js)
+        ↓
+API (Node.js / NestJS)
+        ↓
+Auth Layer (JWT)
+        ↓
+Business Logic
+        ↓
+PostgreSQL
+        ↓
+AI Engine (OpenAI / Claude)
+        ↓
+Response → Spreadsheet → Export
+
+
+  onboarding_completed BOOLEAN DEFAULT FALSE
