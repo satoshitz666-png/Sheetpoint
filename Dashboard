@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SheetPoint — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0A0C10;
+  --bg2:      #0F1218;
+  --bg3:      #13171F;
+  --surface:  #181C27;
+  --surface2: #1E2333;
+  --surface3: #232940;
+  --border:   rgba(255,255,255,0.07);
+  --border2:  rgba(255,255,255,0.13);
+  --border3:  rgba(255,255,255,0.20);
+  --text:     #EEF0F7;
+  --text2:    #8B93AD;
+  --text3:    #4A5068;
+  --gold:     #D4A843;
+  --gold2:    #EFC060;
+  --gold-dim: rgba(212,168,67,0.12);
+  --gold-d2:  rgba(212,168,67,0.06);
+  --blue:     #4A90E2;
+  --blue-dim: rgba(74,144,226,0.12);
+  --green:    #34D399;
+  --green-dim:rgba(52,211,153,0.12);
+  --red:      #F87171;
+  --red-dim:  rgba(248,113,113,0.12);
+  --purple:   #A78BFA;
+  --purple-dim:rgba(167,139,250,0.12);
+  --r:        10px;
+  --r-lg:     16px;
+  --r-xl:     20px;
+  --sidebar:  220px;
+  --font-d:   'Syne', sans-serif;
+  --font-b:   'DM Sans', sans-serif;
+  --font-m:   'DM Mono', monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-b);font-size:14px;display:flex;flex-direction:column;}
+
+/* ── TOP BAR ── */
+.topbar{
+  height:52px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px 0 0;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  flex-shrink:0;z-index:50;
+}
+.topbar-logo{
+  width:var(--sidebar);display:flex;align-items:center;gap:9px;
+  padding:0 20px;font-family:var(--font-d);font-weight:700;font-size:17px;
+  border-right:1px solid var(--border);height:100%;
+}
+.topbar-logo .logo-hex{
+  width:28px;height:28px;background:var(--gold-dim);border:1px solid rgba(212,168,67,0.35);
+  border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;
+}
+.topbar-logo .sp{color:var(--gold);}
+.topbar-center{flex:1;display:flex;align-items:center;padding:0 24px;gap:12px;}
+.topbar-search{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:7px 14px;flex:1;max-width:380px;cursor:text;
+}
+.topbar-search input{
+  background:transparent;border:none;outline:none;color:var(--text2);
+  font-family:var(--font-b);font-size:13px;flex:1;
+}
+.topbar-search input::placeholder{color:var(--text3);}
+.topbar-search svg{width:14px;height:14px;color:var(--text3);flex-shrink:0;}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.credit-badge{
+  display:flex;align-items:center;gap:6px;
+  background:var(--gold-dim);border:1px solid rgba(212,168,67,0.25);
+  border-radius:8px;padding:5px 12px;cursor:pointer;
+  transition:all .2s;
+}
+.credit-badge:hover{border-color:var(--gold);}
+.credit-badge .cr-num{font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--gold);}
+.credit-badge .cr-label{font-size:11px;color:var(--text3);}
+.credit-bar{width:60px;height:4px;background:var(--surface3);border-radius:10px;overflow:hidden;}
+.credit-fill{height:100%;background:var(--gold);border-radius:10px;width:80%;}
+.icon-btn{
+  width:34px;height:34px;border-radius:8px;border:1px solid var(--border);
+  background:transparent;color:var(--text2);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.icon-btn:hover{background:var(--surface);border-color:var(--border2);color:var(--text);}
+.icon-btn svg{width:16px;height:16px;}
+.avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--gold-dim);border:1px solid rgba(212,168,67,0.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:600;color:var(--gold);cursor:pointer;
+  font-family:var(--font-d);
+}
+
+/* ── LAYOUT ── */
+.app-body{display:flex;flex:1;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  width:var(--sidebar);background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;
+}
+.sidebar::-webkit-scrollbar{width:4px;}
+.sidebar::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:4px;}
+.nav-section{padding:8px 10px 4px;}
+.nav-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;padding:8px 8px 4px;}
+.nav-item{
+  display:flex;align-items:center;gap:10px;padding:8px 10px;
+  border-radius:8px;cursor:pointer;transition:all .15s;
+  color:var(--text2);font-size:13px;position:relative;
+  margin-bottom:1px;
+}
+.nav-item:hover{background:var(--surface);color:var(--text);}
+.nav-item.active{background:var(--gold-dim);color:var(--gold);}
+.nav-item.active::before{
+  content:'';position:absolute;left:-10px;top:50%;transform:translateY(-50%);
+  width:3px;height:60%;background:var(--gold);border-radius:0 3px 3px 0;
+}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;}
+.nav-item .badge{
+  margin-left:auto;font-size:10px;font-family:var(--font-m);
+  padding:2px 7px;border-radius:10px;
+  background:var(--surface3);color:var(--text3);
+}
+.nav-item.active .badge{background:rgba(212,168,67,0.2);color:var(--gold);}
+.sidebar-bottom{
+  margin-top:auto;padding:12px 10px;border-top:1px solid var(--border);
+}
+.upgrade-card{
+  background:var(--gold-d2);border:1px solid rgba(212,168,67,0.2);
+  border-radius:var(--r);padding:14px;
+}
+.upgrade-card h4{font-family:var(--font-d);font-size:13px;font-weight:700;margin-bottom:4px;}
+.upgrade-card p{font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.5;}
+.btn-upgrade{
+  width:100%;padding:7px;border-radius:7px;
+  background:var(--gold);border:none;
+  color:#0A0C10;font-family:var(--font-b);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .2s;
+}
+.btn-upgrade:hover{background:var(--gold2);}
+
+/* ── MAIN CONTENT ── */
+.main{flex:1;overflow-y:auto;background:var(--bg);}
+.main::-webkit-scrollbar{width:6px;}
+.main::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:4px;}
+.page{display:none;padding:28px 32px;}
+.page.active{display:block;}
+
+/* ── PAGE HEADER ── */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;}
+.page-title{font-family:var(--font-d);font-size:22px;font-weight:700;}
+.page-sub{font-size:13px;color:var(--text2);margin-top:4px;}
+.header-actions{display:flex;gap:10px;align-items:center;}
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 16px;border-radius:8px;font-family:var(--font-b);
+  font-size:13px;cursor:pointer;transition:all .2s;border:none;
+}
+.btn-gold{background:var(--gold);color:#0A0C10;font-weight:600;}
+.btn-gold:hover{background:var(--gold2);transform:translateY(-1px);}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text2);}
+.btn-outline:hover{border-color:var(--border3);color:var(--text);}
+.btn-surface{background:var(--surface);border:1px solid var(--border);color:var(--text2);}
+.btn-surface:hover{border-color:var(--border2);color:var(--text);}
+.btn svg{width:14px;height:14px;}
+
+/* ── STAT CARDS ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
+.stat-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:18px 20px;position:relative;overflow:hidden;
+}
+.stat-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--accent,transparent);
+}
+.stat-card[data-a="gold"]{--accent:var(--gold);}
+.stat-card[data-a="blue"]{--accent:var(--blue);}
+.stat-card[data-a="green"]{--accent:var(--green);}
+.stat-card[data-a="purple"]{--accent:var(--purple);}
+.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+.stat-val{font-family:var(--font-d);font-size:26px;font-weight:700;line-height:1;}
+.stat-change{display:flex;align-items:center;gap:4px;margin-top:6px;font-size:11px;}
+.stat-change.up{color:var(--green);}
+.stat-change.down{color:var(--red);}
+.stat-change.warn{color:var(--gold);}
+.stat-icon{
+  position:absolute;right:16px;top:16px;
+  width:36px;height:36px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+}
+
+/* ── GRID LAYOUTS ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.grid-3-1{display:grid;grid-template-columns:2fr 1fr;gap:16px;}
+.mt{margin-top:20px;}
+.mb{margin-bottom:16px;}
+
+/* ── CARD ── */
+.card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:20px;
+}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.card-title{font-family:var(--font-d);font-size:14px;font-weight:600;}
+.card-action{font-size:12px;color:var(--gold);cursor:pointer;text-decoration:none;}
+.card-action:hover{text-decoration:underline;}
+
+/* ── QUICK PROMPT ── */
+.quick-prompt{
+  background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-xl);
+  padding:20px;margin-bottom:24px;
+}
+.qp-label{font-size:11px;color:var(--text3);font-family:var(--font-m);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;}
+.qp-input-wrap{display:flex;gap:10px;align-items:flex-end;}
+.qp-input{
+  flex:1;background:var(--bg3);border:1px solid var(--border2);border-radius:12px;
+  padding:14px 16px;color:var(--text);font-family:var(--font-b);font-size:14px;
+  outline:none;resize:none;height:52px;transition:border-color .2s;
+  font-weight:300;
+}
+.qp-input::placeholder{color:var(--text3);}
+.qp-input:focus{border-color:rgba(212,168,67,0.4);}
+.qp-params{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.qp-param{
+  display:flex;align-items:center;gap:6px;
+  background:var(--bg3);border:1px solid var(--border);border-radius:7px;
+  padding:5px 10px;font-size:12px;color:var(--text2);cursor:pointer;
+  transition:all .15s;
+}
+.qp-param:hover{border-color:var(--border2);color:var(--text);}
+.qp-param select{
+  background:transparent;border:none;color:var(--text2);font-family:var(--font-b);
+  font-size:12px;outline:none;cursor:pointer;
+}
+.qp-send{
+  width:52px;height:52px;border-radius:12px;border:none;
+  background:var(--gold);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .2s;
+}
+.qp-send:hover{background:var(--gold2);transform:translateY(-1px);}
+.qp-send svg{width:20px;height:20px;}
+
+/* ── RECENT PROJECTS ── */
+.project-list{display:flex;flex-direction:column;gap:8px;}
+.project-item{
+  display:flex;align-items:center;gap:12px;padding:12px 14px;
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);
+  cursor:pointer;transition:all .15s;
+}
+.project-item:hover{border-color:var(--border2);background:var(--surface);}
+.project-icon{
+  width:36px;height:36px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;
+}
+.project-info{flex:1;min-width:0;}
+.project-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.project-meta{font-size:11px;color:var(--text3);margin-top:2px;}
+.project-badge{
+  font-size:10px;font-family:var(--font-m);padding:3px 8px;border-radius:6px;
+  flex-shrink:0;
+}
+
+/* ── ACTIVITY ── */
+.activity-list{display:flex;flex-direction:column;gap:0;}
+.activity-item{
+  display:flex;gap:12px;align-items:flex-start;
+  padding:10px 0;border-bottom:1px solid var(--border);
+}
+.activity-item:last-child{border-bottom:none;}
+.activity-dot{
+  width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;
+}
+.activity-text{font-size:13px;color:var(--text2);line-height:1.5;}
+.activity-time{font-size:11px;color:var(--text3);margin-top:2px;}
+
+/* ── PROMPT ENGINE PAGE ── */
+.prompt-engine{max-width:860px;margin:0 auto;}
+.pe-hero{text-align:center;margin-bottom:32px;}
+.pe-hero h2{font-family:var(--font-d);font-size:28px;font-weight:800;margin-bottom:8px;}
+.pe-hero p{font-size:15px;color:var(--text2);}
+.pe-box{
+  background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-xl);
+  padding:24px;margin-bottom:20px;
+}
+.pe-textarea{
+  width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);
+  padding:16px;color:var(--text);font-family:var(--font-b);font-size:15px;font-weight:300;
+  outline:none;resize:none;height:100px;transition:border-color .2s;line-height:1.6;
+}
+.pe-textarea::placeholder{color:var(--text3);}
+.pe-textarea:focus{border-color:rgba(212,168,67,0.4);}
+.pe-options{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px;}
+.pe-opt{
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);
+  padding:10px 12px;
+}
+.pe-opt label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:6px;}
+.pe-opt select{
+  width:100%;background:transparent;border:none;color:var(--text2);
+  font-family:var(--font-b);font-size:12px;outline:none;cursor:pointer;
+}
+.pe-footer{display:flex;align-items:center;justify-content:space-between;margin-top:16px;}
+.credit-cost{
+  display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);
+}
+.credit-cost .cost{color:var(--gold);font-weight:600;font-family:var(--font-m);}
+.pe-generate{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 28px;border-radius:10px;
+  background:var(--gold);border:none;
+  color:#0A0C10;font-family:var(--font-b);font-size:14px;font-weight:700;
+  cursor:pointer;transition:all .25s;
+}
+.pe-generate:hover{background:var(--gold2);transform:translateY(-1px);}
+.pe-generate svg{width:16px;height:16px;}
+
+/* AI Processing animation */
+.ai-processing{
+  display:none;text-align:center;padding:40px;
+  background:var(--surface);border:1px solid var(--border2);border-radius:var(--r-xl);
+}
+.ai-processing.show{display:block;}
+.ai-spinner{
+  width:56px;height:56px;border-radius:50%;margin:0 auto 20px;
+  border:2px solid var(--border);border-top-color:var(--gold);
+  animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.ai-steps{display:flex;flex-direction:column;gap:8px;margin-top:20px;text-align:left;max-width:320px;margin-left:auto;margin-right:auto;}
+.ai-step{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2);}
+.ai-step.done{color:var(--green);}
+.ai-step.active{color:var(--gold);}
+.ai-step svg{width:14px;height:14px;flex-shrink:0;}
+
+/* Intent chips */
+.intent-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+.intent-chip{
+  padding:7px 14px;border-radius:8px;font-size:13px;cursor:pointer;
+  border:1px solid var(--border);background:var(--bg3);color:var(--text2);
+  transition:all .15s;display:flex;align-items:center;gap:7px;
+}
+.intent-chip:hover{border-color:var(--border2);}
+.intent-chip.active{background:var(--gold-dim);border-color:rgba(212,168,67,0.4);color:var(--gold);}
+.suggest-prompts{display:flex;flex-direction:column;gap:6px;}
+.suggest-item{
+  padding:10px 14px;border-radius:var(--r);
+  background:var(--bg3);border:1px solid var(--border);
+  font-size:13px;color:var(--text2);cursor:pointer;transition:all .15s;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.suggest-item:hover{border-color:var(--gold);color:var(--text);}
+.suggest-item svg{width:12px;height:12px;color:var(--text3);}
+
+/* ── RESULT / EDITOR ── */
+.result-page{display:none;}
+.result-page.show{display:block;}
+.result-toolbar{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg) var(--r-lg) 0 0;flex-wrap:wrap;
+}
+.result-tabs{display:flex;gap:2px;background:var(--bg3);border-radius:7px;padding:3px;}
+.rtab{
+  padding:5px 14px;border-radius:5px;font-size:12px;cursor:pointer;
+  color:var(--text2);transition:all .15s;
+}
+.rtab.active{background:var(--surface2);color:var(--text);}
+.toolbar-sep{width:1px;height:20px;background:var(--border);margin:0 4px;}
+.ai-refine-btn{
+  display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:7px;
+  background:var(--purple-dim);border:1px solid rgba(167,139,250,0.25);
+  color:var(--purple);font-size:12px;cursor:pointer;transition:all .2s;
+}
+.ai-refine-btn:hover{border-color:var(--purple);}
+.ai-refine-btn svg{width:13px;height:13px;}
+.export-btn{
+  margin-left:auto;display:flex;align-items:center;gap:6px;
+  padding:7px 16px;border-radius:8px;background:var(--gold);border:none;
+  color:#0A0C10;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-b);
+  transition:all .2s;
+}
+.export-btn:hover{background:var(--gold2);}
+
+/* Spreadsheet */
+.sheet-wrap{
+  background:var(--bg3);border:1px solid var(--border);
+  border-top:none;border-radius:0 0 var(--r-lg) var(--r-lg);
+  overflow:auto;max-height:360px;
+}
+.sheet-wrap::-webkit-scrollbar{width:6px;height:6px;}
+.sheet-wrap::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:4px;}
+table.sheet{border-collapse:collapse;width:100%;min-width:700px;}
+table.sheet th,table.sheet td{
+  padding:6px 12px;border:1px solid rgba(255,255,255,0.05);
+  font-family:var(--font-m);font-size:11px;white-space:nowrap;
+}
+table.sheet th{
+  background:var(--surface);color:var(--text3);font-weight:400;
+  position:sticky;top:0;z-index:1;text-align:center;
+}
+table.sheet td{color:var(--text2);}
+table.sheet td:first-child{background:var(--surface);color:var(--text3);position:sticky;left:0;z-index:1;font-weight:400;}
+table.sheet td.val{text-align:right;color:var(--text);}
+table.sheet td.formula{text-align:right;color:var(--blue);}
+table.sheet td.good{text-align:right;color:var(--green);}
+table.sheet td.warn{text-align:right;color:var(--gold);}
+table.sheet td.bad{text-align:right;color:var(--red);}
+table.sheet tr.header td{background:var(--surface2);color:var(--gold);font-weight:500;font-size:10px;text-transform:uppercase;letter-spacing:.06em;}
+table.sheet tr:hover td{background:rgba(255,255,255,0.02);}
+
+/* Insight panel */
+.result-layout{display:grid;grid-template-columns:1fr 280px;gap:16px;margin-top:16px;}
+.insight-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:12px;}
+.ip-title{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;}
+.insight-item{
+  padding:11px;border-radius:var(--r);border-left:2px solid var(--accent,var(--border2));
+  background:var(--bg3);
+}
+.insight-item[data-t="risk"]{--accent:var(--red);}
+.insight-item[data-t="warn"]{--accent:var(--gold);}
+.insight-item[data-t="good"]{--accent:var(--green);}
+.insight-item[data-t="info"]{--accent:var(--blue);}
+.insight-tag{
+  display:inline-block;font-size:9px;font-family:var(--font-m);
+  padding:2px 7px;border-radius:5px;margin-bottom:5px;
+  text-transform:uppercase;letter-spacing:.06em;
+}
+.insight-item[data-t="risk"] .insight-tag{background:var(--red-dim);color:var(--red);}
+.insight-item[data-t="warn"] .insight-tag{background:var(--gold-dim);color:var(--gold);}
+.insight-item[data-t="good"] .insight-tag{background:var(--green-dim);color:var(--green);}
+.insight-item[data-t="info"] .insight-tag{background:var(--blue-dim);color:var(--blue);}
+.insight-txt{font-size:12px;color:var(--text2);line-height:1.55;}
+.scenario-tabs{display:flex;gap:4px;margin-top:4px;}
+.sc-tab{
+  flex:1;padding:6px 4px;text-align:center;border-radius:7px;
+  border:1px solid var(--border);background:transparent;
+  color:var(--text3);font-size:11px;cursor:pointer;font-family:var(--font-b);
+  transition:all .15s;
+}
+.sc-tab.active{background:var(--gold-dim);border-color:rgba(212,168,67,0.35);color:var(--gold);}
+.rec-list{display:flex;flex-direction:column;gap:6px;}
+.rec-item{
+  display:flex;align-items:flex-start;gap:7px;font-size:12px;color:var(--text2);
+  padding:8px;background:var(--bg3);border-radius:7px;line-height:1.5;
+}
+.rec-item .arr{color:var(--gold);flex-shrink:0;font-weight:600;font-family:var(--font-m);}
+
+/* ── PROJECTS PAGE ── */
+.folder-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;}
+.folder-tab{
+  padding:7px 14px;border-radius:8px;font-size:13px;cursor:pointer;
+  border:1px solid var(--border);background:transparent;color:var(--text2);
+  transition:all .15s;font-family:var(--font-b);display:flex;align-items:center;gap:6px;
+}
+.folder-tab.active{background:var(--gold-dim);border-color:rgba(212,168,67,0.3);color:var(--gold);}
+.folder-tab:hover:not(.active){border-color:var(--border2);}
+.projects-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.proj-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:18px;cursor:pointer;
+  transition:all .2s;position:relative;
+}
+.proj-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.proj-card-icon{font-size:28px;margin-bottom:12px;display:block;}
+.proj-card-title{font-family:var(--font-d);font-size:14px;font-weight:600;margin-bottom:4px;}
+.proj-card-meta{font-size:12px;color:var(--text3);}
+.proj-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
+.proj-card-badge{font-size:10px;font-family:var(--font-m);padding:3px 8px;border-radius:5px;}
+.proj-card-actions{display:flex;gap:4px;}
+.proj-card-action{
+  width:26px;height:26px;border-radius:6px;border:1px solid var(--border);
+  background:transparent;color:var(--text3);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.proj-card-action:hover{border-color:var(--border2);color:var(--text);}
+.proj-card-action svg{width:12px;height:12px;}
+.proj-new{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border:1px dashed var(--border2);border-radius:var(--r-lg);
+  padding:40px;cursor:pointer;transition:all .2s;
+  color:var(--text3);text-align:center;gap:10px;
+}
+.proj-new:hover{border-color:var(--gold);color:var(--gold);}
+.proj-new svg{width:28px;height:28px;}
+.proj-new span{font-size:13px;}
+
+/* ── TEMPLATES ── */
+.template-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.tpl-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:18px;cursor:pointer;transition:all .2s;
+}
+.tpl-card:hover{border-color:rgba(212,168,67,0.3);transform:translateY(-2px);}
+.tpl-emoji{font-size:28px;margin-bottom:12px;display:block;}
+.tpl-name{font-family:var(--font-d);font-size:14px;font-weight:600;margin-bottom:4px;}
+.tpl-desc{font-size:12px;color:var(--text3);line-height:1.5;margin-bottom:12px;}
+.tpl-footer{display:flex;align-items:center;justify-content:space-between;}
+.tpl-cost{font-size:11px;color:var(--text3);font-family:var(--font-m);}
+.tpl-use{
+  font-size:11px;padding:5px 12px;border-radius:7px;
+  background:var(--gold-dim);border:1px solid rgba(212,168,67,0.2);
+  color:var(--gold);cursor:pointer;font-family:var(--font-b);
+  transition:all .15s;
+}
+.tpl-use:hover{background:rgba(212,168,67,0.2);}
+.ai-rec-banner{
+  display:flex;align-items:center;gap:12px;
+  background:var(--purple-dim);border:1px solid rgba(167,139,250,0.2);
+  border-radius:var(--r);padding:12px 16px;margin-bottom:20px;
+  font-size:13px;color:var(--purple);
+}
+.ai-rec-banner svg{width:18px;height:18px;flex-shrink:0;}
+
+/* ── SETTINGS ── */
+.settings-layout{display:grid;grid-template-columns:200px 1fr;gap:20px;}
+.settings-nav{display:flex;flex-direction:column;gap:2px;}
+.set-nav-item{
+  padding:8px 12px;border-radius:8px;font-size:13px;cursor:pointer;
+  color:var(--text2);transition:all .15s;display:flex;align-items:center;gap:8px;
+}
+.set-nav-item svg{width:15px;height:15px;}
+.set-nav-item:hover{background:var(--surface);color:var(--text);}
+.set-nav-item.active{background:var(--gold-dim);color:var(--gold);}
+.settings-content{display:flex;flex-direction:column;gap:16px;}
+.settings-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px;}
+.settings-section h3{font-family:var(--font-d);font-size:15px;font-weight:600;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.form-row{margin-bottom:14px;}
+.form-label{font-size:12px;color:var(--text2);margin-bottom:6px;display:block;}
+.form-input{
+  width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;
+  padding:9px 12px;color:var(--text);font-family:var(--font-b);font-size:13px;outline:none;
+  transition:border-color .2s;
+}
+.form-input:focus{border-color:rgba(212,168,67,0.4);}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.plan-card{
+  padding:16px;border-radius:var(--r);border:1px solid var(--border);
+  display:flex;align-items:center;gap:14px;
+}
+.plan-card.current{border-color:rgba(212,168,67,0.3);background:var(--gold-d2);}
+.plan-info{flex:1;}
+.plan-name{font-family:var(--font-d);font-size:14px;font-weight:600;}
+.plan-price{font-size:12px;color:var(--text3);margin-top:3px;}
+.api-key-row{
+  display:flex;gap:10px;align-items:center;
+  background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;
+}
+.api-key-val{flex:1;font-family:var(--font-m);font-size:12px;color:var(--text3);}
+.api-copy{
+  padding:5px 12px;border-radius:6px;background:var(--surface3);border:none;
+  color:var(--text2);font-size:12px;cursor:pointer;font-family:var(--font-b);transition:all .15s;
+}
+.api-copy:hover{color:var(--text);}
+
+/* ── USAGE CHART ── */
+.usage-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.usage-bar-label{font-size:12px;color:var(--text2);width:130px;flex-shrink:0;}
+.usage-bar-track{flex:1;height:6px;background:var(--surface3);border-radius:10px;overflow:hidden;}
+.usage-bar-fill{height:100%;border-radius:10px;}
+.usage-bar-val{font-size:11px;font-family:var(--font-m);color:var(--text3);width:35px;text-align:right;flex-shrink:0;}
+
+/* ── NOTIFICATIONS / ALERTS ── */
+.alert{
+  display:flex;align-items:flex-start;gap:10px;padding:12px 14px;
+  border-radius:var(--r);margin-bottom:14px;font-size:13px;
+}
+.alert-warn{background:rgba(212,168,67,0.08);border:1px solid rgba(212,168,67,0.2);color:var(--gold);}
+.alert svg{width:16px;height:16px;flex-shrink:0;margin-top:1px;}
+
+/* ── MINI CHART (SVG) ── */
+.mini-chart{margin-top:10px;}
+
+/* ── TAGS ── */
+.tag{
+  display:inline-block;font-size:10px;font-family:var(--font-m);
+  padding:3px 8px;border-radius:5px;
+}
+.tag-gold{background:var(--gold-dim);color:var(--gold);}
+.tag-blue{background:var(--blue-dim);color:var(--blue);}
+.tag-green{background:var(--green-dim);color:var(--green);}
+.tag-red{background:var(--red-dim);color:var(--red);}
+.tag-purple{background:var(--purple-dim);color:var(--purple);}
+.tag-gray{background:var(--surface3);color:var(--text3);}
+
+/* ── TRANSITIONS ── */
+.page{animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+/* ── TOOLTIP / POPOVER ── */
+.export-dropdown{
+  display:none;position:absolute;right:0;top:calc(100% + 6px);
+  background:var(--surface2);border:1px solid var(--border2);
+  border-radius:var(--r);padding:6px;min-width:160px;z-index:100;
+}
+.export-dropdown.show{display:block;}
+.export-option{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;
+  border-radius:7px;font-size:13px;color:var(--text2);cursor:pointer;
+  transition:all .15s;
+}
+.export-option:hover{background:var(--surface3);color:var(--text);}
+.export-option svg{width:14px;height:14px;}
+.export-wrap{position:relative;}
+
+/* scrollbar */
+.page::-webkit-scrollbar{width:0;}
+</style>
+</head>
+<body>
+
+<!-- ═══ TOP BAR ═══ -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <div class="logo-hex">⬡</div>
+    Sheet<span class="sp">Point</span>
+  </div>
+  <div class="topbar-center">
+    <div class="topbar-search">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="Search projects, templates...">
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="credit-badge" onclick="navigate('billing')">
+      <div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="cr-num">24</span>
+          <span style="font-size:11px;color:var(--text3)">/ 30</span>
+        </div>
+        <div class="credit-bar" style="margin-top:4px;"><div class="credit-fill" style="width:80%;"></div></div>
+      </div>
+      <span class="cr-label">credits</span>
+    </div>
+    <button class="icon-btn">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+    </button>
+    <div class="avatar" title="Raka · Admin">RA</div>
+  </div>
+</div>
+
+<!-- ═══ BODY ═══ -->
+<div class="app-body">
+
+  <!-- ═══ SIDEBAR ═══ -->
+  <div class="sidebar">
+    <div class="nav-section">
+      <div class="nav-item active" onclick="navigate('home')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
+      </div>
+      <div class="nav-item" onclick="navigate('prompt')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        Prompt Engine
+        <span class="badge">AI</span>
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Workspace</div>
+      <div class="nav-item" onclick="navigate('projects')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+        Projects
+        <span class="badge">8</span>
+      </div>
+      <div class="nav-item" onclick="navigate('templates')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        Templates
+      </div>
+      <div class="nav-item" onclick="navigate('insights')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Insights
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Account</div>
+      <div class="nav-item" onclick="navigate('settings')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06A1.65 1.65 0 0015 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 008.6 15a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-.29V4a2 2 0 014 0v.09a1.65 1.65 0 001 .29 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 00.29 1v.09a2 2 0 010 2z"/></svg>
+        Settings
+      </div>
+      <div class="nav-item" id="billing-nav" onclick="navigate('billing')">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Billing
+        <span class="badge tag-gold" style="background:var(--gold-dim);color:var(--gold);">Trial</span>
+      </div>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="upgrade-card">
+        <h4>🔥 Upgrade Plan</h4>
+        <p>You have 6 credits left. Upgrade for unlimited generations.</p>
+        <button class="btn-upgrade" onclick="navigate('billing')">Upgrade Now →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main">
+
+    <!-- ─── HOME ─── -->
+    <div id="page-home" class="page active" style="padding:28px 32px;">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Good morning, Raka 👋</div>
+          <div class="page-sub">Here's your SheetPoint workspace overview</div>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-outline">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Activity Log
+          </button>
+          <button class="btn btn-gold" onclick="navigate('prompt')">
+            <svg fill="none" stroke="#0A0C10" stroke-width="2.5" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            New Generation
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card" data-a="gold">
+          <div class="stat-label">Credits Remaining</div>
+          <div class="stat-val" style="color:var(--gold)">24</div>
+          <div class="stat-change warn">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" width="11" height="11"><polyline points="12 5 12 19"/><polyline points="19 12 12 19 5 12"/></svg>
+            6 used this week
+          </div>
+          <div class="stat-icon" style="background:var(--gold-dim);">⚡</div>
+        </div>
+        <div class="stat-card" data-a="blue">
+          <div class="stat-label">Sheets Generated</div>
+          <div class="stat-val">47</div>
+          <div class="stat-change up">↑ 12 this month</div>
+          <div class="stat-icon" style="background:var(--blue-dim);">📊</div>
+        </div>
+        <div class="stat-card" data-a="green">
+          <div class="stat-label">Active Projects</div>
+          <div class="stat-val">8</div>
+          <div class="stat-change up">↑ 3 this week</div>
+          <div class="stat-icon" style="background:var(--green-dim);">📁</div>
+        </div>
+        <div class="stat-card" data-a="purple">
+          <div class="stat-label">AI Refinements</div>
+          <div class="stat-val">23</div>
+          <div class="stat-change up">↑ most active</div>
+          <div class="stat-icon" style="background:var(--purple-dim);">🧠</div>
+        </div>
+      </div>
+
+      <!-- Quick Prompt -->
+      <div class="quick-prompt">
+        <div class="qp-label">// quick generate</div>
+        <div class="qp-input-wrap">
+          <textarea class="qp-input" id="home-prompt" placeholder="Generate financial projection startup SaaS 5 tahun dengan Series A di bulan 18..."></textarea>
+          <button class="qp-send" onclick="startGenerate()">
+            <svg fill="none" stroke="#0A0C10" stroke-width="2.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+        <div class="qp-params">
+          <div class="qp-param">🏭 <select><option>Industry</option><option>SaaS</option><option>F&B</option><option>FinTech</option><option>Web3</option></select></div>
+          <div class="qp-param">💰 <select><option>Currency</option><option>USD</option><option>IDR</option><option>SGD</option></select></div>
+          <div class="qp-param">📅 <select><option>Timeframe</option><option>1 Year</option><option>3 Years</option><option>5 Years</option><option>10 Years</option></select></div>
+          <div class="qp-param">⚙️ <select><option>Complexity</option><option>Simple</option><option>Advanced</option></select></div>
+        </div>
+      </div>
+
+      <div class="grid-3-1">
+        <!-- Recent Projects -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Recent Projects</div>
+            <a class="card-action" onclick="navigate('projects')">View all →</a>
+          </div>
+          <div class="project-list">
+            <div class="project-item" onclick="navigate('result')">
+              <div class="project-icon" style="background:var(--blue-dim);">📊</div>
+              <div class="project-info">
+                <div class="project-name">Startup SaaS — 5Y Financial Model</div>
+                <div class="project-meta">2 hours ago · Finance · 3 sheets</div>
+              </div>
+              <span class="project-badge tag-green">Active</span>
+            </div>
+            <div class="project-item" onclick="navigate('result')">
+              <div class="project-icon" style="background:var(--gold-dim);">🪙</div>
+              <div class="project-info">
+                <div class="project-name">Bitcoin Treasury Strategy Q3</div>
+                <div class="project-meta">Yesterday · Web3 · 4 sheets</div>
+              </div>
+              <span class="project-badge tag-gold">Web3</span>
+            </div>
+            <div class="project-item" onclick="navigate('result')">
+              <div class="project-icon" style="background:var(--purple-dim);">📣</div>
+              <div class="project-info">
+                <div class="project-name">Q4 Marketing Campaign ROI</div>
+                <div class="project-meta">2 days ago · Marketing · 2 sheets</div>
+              </div>
+              <span class="project-badge tag-blue">Done</span>
+            </div>
+            <div class="project-item" onclick="navigate('result')">
+              <div class="project-icon" style="background:var(--green-dim);">🏪</div>
+              <div class="project-info">
+                <div class="project-name">F&B Cashflow — 3 Year Plan</div>
+                <div class="project-meta">3 days ago · Finance · 5 sheets</div>
+              </div>
+              <span class="project-badge tag-gray">Draft</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity & Usage -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Credit Usage</div>
+            </div>
+            <div class="usage-bar-row">
+              <div class="usage-bar-label">Finance models</div>
+              <div class="usage-bar-track"><div class="usage-bar-fill" style="width:70%;background:var(--blue);"></div></div>
+              <div class="usage-bar-val">14</div>
+            </div>
+            <div class="usage-bar-row">
+              <div class="usage-bar-label">Web3 / Crypto</div>
+              <div class="usage-bar-track"><div class="usage-bar-fill" style="width:30%;background:var(--gold);"></div></div>
+              <div class="usage-bar-val">6</div>
+            </div>
+            <div class="usage-bar-row">
+              <div class="usage-bar-label">Marketing plans</div>
+              <div class="usage-bar-track"><div class="usage-bar-fill" style="width:20%;background:var(--purple);"></div></div>
+              <div class="usage-bar-val">4</div>
+            </div>
+            <div class="usage-bar-row">
+              <div class="usage-bar-label">AI Refinements</div>
+              <div class="usage-bar-track"><div class="usage-bar-fill" style="width:15%;background:var(--green);"></div></div>
+              <div class="usage-bar-val">3</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Recent Activity</div></div>
+            <div class="activity-list">
+              <div class="activity-item">
+                <div class="activity-dot" style="background:var(--green);"></div>
+                <div><div class="activity-text">Generated <strong>SaaS 5Y Projection</strong></div><div class="activity-time">2 hrs ago · 2 credits used</div></div>
+              </div>
+              <div class="activity-item">
+                <div class="activity-dot" style="background:var(--purple);"></div>
+                <div><div class="activity-text">AI Refined BTC Treasury model</div><div class="activity-time">Yesterday · 1 credit used</div></div>
+              </div>
+              <div class="activity-item">
+                <div class="activity-dot" style="background:var(--blue);"></div>
+                <div><div class="activity-text">Exported Q4 ROI as PDF Report</div><div class="activity-time">2 days ago</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PROMPT ENGINE ─── -->
+    <div id="page-prompt" class="page" style="padding:28px 32px;">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Prompt Engine</div>
+          <div class="page-sub">Describe your financial model in natural language</div>
+        </div>
+      </div>
+      <div class="prompt-engine">
+        <div id="prompt-input-view">
+          <div class="pe-hero">
+            <div style="font-size:48px;margin-bottom:12px;">⚡</div>
+            <h2>What do you want to build?</h2>
+            <p>SheetPoint understands your intent and generates a complete, ready-to-use financial model.</p>
+          </div>
+
+          <!-- Intent chips -->
+          <div style="margin-bottom:16px;">
+            <div style="font-size:11px;color:var(--text3);font-family:var(--font-m);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">// Select intent</div>
+            <div class="intent-chips">
+              <div class="intent-chip active" onclick="setIntent(this,'Financial Model')">📊 Financial Model</div>
+              <div class="intent-chip" onclick="setIntent(this,'KPI Dashboard')">📈 KPI Dashboard</div>
+              <div class="intent-chip" onclick="setIntent(this,'Marketing Plan')">📣 Marketing Plan</div>
+              <div class="intent-chip" onclick="setIntent(this,'Web3 / Tokenomics')">🪙 Web3 / Tokenomics</div>
+              <div class="intent-chip" onclick="setIntent(this,'ROI Calculator')">🔢 ROI Calculator</div>
+              <div class="intent-chip" onclick="setIntent(this,'Budget Planner')">💼 Budget Planner</div>
+            </div>
+          </div>
+
+          <div class="pe-box">
+            <div style="font-size:11px;color:var(--text3);font-family:var(--font-m);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;">// Your prompt</div>
+            <textarea class="pe-textarea" id="pe-prompt" placeholder="Buatkan financial projection untuk startup SaaS B2B dengan ARR target $2M di tahun ke-3, asumsi growth 30% YoY, CAC $800, LTV $4000..."></textarea>
+            <div class="pe-options">
+              <div class="pe-opt">
+                <label>Industry</label>
+                <select><option>SaaS / Tech</option><option>F&B</option><option>E-commerce</option><option>FinTech</option><option>Web3</option><option>Healthcare</option></select>
+              </div>
+              <div class="pe-opt">
+                <label>Currency</label>
+                <select><option>USD ($)</option><option>IDR (Rp)</option><option>SGD (S$)</option><option>EUR (€)</option></select>
+              </div>
+              <div class="pe-opt">
+                <label>Timeframe</label>
+                <select><option>3 Years</option><option>1 Year</option><option>5 Years</option><option>10 Years</option></select>
+              </div>
+              <div class="pe-opt">
+                <label>Complexity</label>
+                <select><option>Advanced</option><option>Simple</option></select>
+              </div>
+            </div>
+            <div class="pe-footer">
+              <div class="credit-cost">
+                <svg fill="none" stroke="var(--gold)" stroke-width="2" viewBox="0 0 24 24" width="14" height="14"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Will use <span class="cost">2 credits</span> &nbsp;·&nbsp; Balance: <span style="color:var(--text2);font-family:var(--font-m)">24</span>
+              </div>
+              <button class="pe-generate" onclick="startGenerate()">
+                <svg fill="none" stroke="#0A0C10" stroke-width="2.5" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Generate Model
+              </button>
+            </div>
+          </div>
+
+          <div class="pe-box">
+            <div style="font-size:11px;color:var(--text3);font-family:var(--font-m);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;">// Suggested prompts</div>
+            <div class="suggest-prompts">
+              <div class="suggest-item" onclick="usePrompt(this)">
+                Buat financial projection startup SaaS 5 tahun dengan growth 30% YoY
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+              <div class="suggest-item" onclick="usePrompt(this)">
+                Cashflow bisnis F&B restoran 3 tahun — breakeven analysis
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+              <div class="suggest-item" onclick="usePrompt(this)">
+                Bitcoin treasury strategy dengan DCA schedule dan exit simulation
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+              <div class="suggest-item" onclick="usePrompt(this)">
+                Tokenomics model — allocation, vesting, ROI investor per round
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Processing -->
+        <div class="ai-processing" id="ai-processing">
+          <div class="ai-spinner"></div>
+          <div style="font-family:var(--font-d);font-size:18px;font-weight:700;margin-bottom:6px;">AI Processing your prompt...</div>
+          <div style="font-size:13px;color:var(--text2);">Building your financial model in real-time</div>
+          <div class="ai-steps" id="ai-steps">
+            <div class="ai-step" id="step-1">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+              Parsing intent & context...
+            </div>
+            <div class="ai-step" id="step-2" style="opacity:.4;">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+              Selecting optimal template...
+            </div>
+            <div class="ai-step" id="step-3" style="opacity:.4;">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+              Generating financial structure...
+            </div>
+            <div class="ai-step" id="step-4" style="opacity:.4;">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+              Running decision engine...
+            </div>
+            <div class="ai-step" id="step-5" style="opacity:.4;">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+              Finalizing insights & recommendations...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── RESULT / EDITOR ─── -->
+    <div id="page-result" class="page" style="padding:28px 32px;">
+      <div class="page-header">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="page-title">Startup SaaS — 5Y Financial Model</div>
+            <span class="tag tag-green">Active</span>
+          </div>
+          <div class="page-sub">Generated 2 hours ago · Finance · 2 credits used</div>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-surface">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+            Version History
+          </button>
+          <button class="btn btn-surface" onclick="showRefineBox()">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            AI Refine
+          </button>
+          <div class="export-wrap">
+            <button class="btn btn-gold" onclick="toggleExport()">
+              <svg fill="none" stroke="#0A0C10" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Export
+              <svg fill="none" stroke="#0A0C10" stroke-width="2" viewBox="0 0 24 24" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="export-dropdown" id="export-dd">
+              <div class="export-option">📊 Excel (.xlsx)</div>
+              <div class="export-option">📋 Google Sheets</div>
+              <div class="export-option">📄 PDF Report</div>
+              <div class="export-option">📁 CSV</div>
+              <div style="border-top:1px solid var(--border);margin:4px 0;"></div>
+              <div class="export-option" style="color:var(--gold);">🏆 Investor-Ready Format</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Refine box (hidden by default) -->
+      <div id="refine-box" style="display:none;margin-bottom:16px;">
+        <div class="quick-prompt" style="margin-bottom:0;">
+          <div class="qp-label">// AI Refine — 1 credit</div>
+          <div class="qp-input-wrap">
+            <textarea class="qp-input" placeholder='e.g. "Tambah skenario bearish dengan growth -10%", "Ubah currency ke IDR"...' style="height:48px;"></textarea>
+            <button class="qp-send" style="width:48px;height:48px;">
+              <svg fill="none" stroke="#0A0C10" stroke-width="2.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Spreadsheet -->
+      <div class="result-toolbar">
+        <div class="result-tabs">
+          <div class="rtab active" onclick="switchTab(this)">Revenue</div>
+          <div class="rtab" onclick="switchTab(this)">COGS & Expenses</div>
+          <div class="rtab" onclick="switchTab(this)">Profit & Loss</div>
+          <div class="rtab" onclick="switchTab(this)">KPI Dashboard</div>
+          <div class="rtab" onclick="switchTab(this)">Cash Flow</div>
+        </div>
+        <div class="toolbar-sep"></div>
+        <div class="ai-refine-btn">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          Explain this tab
+        </div>
+        <div class="ai-refine-btn" style="--accent:var(--green);">
+          <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Optimize model
+        </div>
+      </div>
+      <div class="sheet-wrap">
+        <table class="sheet">
+          <thead>
+            <tr>
+              <th style="width:160px;text-align:left;">Row</th>
+              <th>Q1 Y1</th><th>Q2 Y1</th><th>Q3 Y1</th><th>Q4 Y1</th>
+              <th>Y1 Total</th><th>Y2</th><th>Y3</th><th>Y4</th><th>Y5</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="header"><td colspan="10">▸ REVENUE DRIVERS</td></tr>
+            <tr><td>New Customers</td><td class="val">12</td><td class="val">18</td><td class="val">24</td><td class="val">31</td><td class="val">85</td><td class="val">136</td><td class="val">218</td><td class="val">348</td><td class="good">557</td></tr>
+            <tr><td>MRR Growth %</td><td class="val">—</td><td class="val">8%</td><td class="val">8%</td><td class="val">9%</td><td class="formula">=AVG()</td><td class="good">+30%</td><td class="good">+30%</td><td class="good">+30%</td><td class="good">+30%</td></tr>
+            <tr><td>Avg MRR / Customer</td><td class="val">$280</td><td class="val">$280</td><td class="val">$295</td><td class="val">$295</td><td class="formula">=AVG()</td><td class="val">$320</td><td class="val">$360</td><td class="val">$380</td><td class="val">$400</td></tr>
+            <tr class="header"><td colspan="10">▸ REVENUE</td></tr>
+            <tr><td>Monthly Recurring Rev</td><td class="val">$3,360</td><td class="val">$5,040</td><td class="val">$7,080</td><td class="val">$9,145</td><td class="formula">=SUM(B5:E5)</td><td class="good">$108K</td><td class="good">$305K</td><td class="good">$748K</td><td class="good">$2.1M</td></tr>
+            <tr><td>ARR</td><td class="val">$40,320</td><td class="val">$60,480</td><td class="val">$84,960</td><td class="val">$109,740</td><td class="good">$295,500</td><td class="good">$415K</td><td class="good">$741K</td><td class="good">$1.48M</td><td class="good">$4.2M</td></tr>
+            <tr><td>Expansion Revenue</td><td class="val">—</td><td class="val">$420</td><td class="val">$840</td><td class="val">$1,260</td><td class="val">$2,520</td><td class="val">$8,200</td><td class="val">$24,600</td><td class="val">$62K</td><td class="val">$180K</td></tr>
+            <tr class="header"><td colspan="10">▸ CUSTOMER METRICS</td></tr>
+            <tr><td>Churn Rate</td><td class="warn">3.2%</td><td class="warn">3.0%</td><td class="warn">2.8%</td><td class="val">2.5%</td><td class="formula">=AVG()</td><td class="good">2.0%</td><td class="good">1.8%</td><td class="good">1.5%</td><td class="good">1.2%</td></tr>
+            <tr><td>LTV</td><td class="val">$8,750</td><td class="val">$9,333</td><td class="val">$10,536</td><td class="val">$11,800</td><td class="formula">=AVG()</td><td class="good">$16K</td><td class="good">$20K</td><td class="good">$25K</td><td class="good">$33K</td></tr>
+            <tr><td>CAC</td><td class="val">$800</td><td class="val">$800</td><td class="val">$750</td><td class="val">$720</td><td class="formula">=AVG()</td><td class="val">$680</td><td class="val">$620</td><td class="val">$580</td><td class="val">$520</td></tr>
+            <tr><td>LTV / CAC Ratio</td><td class="warn">10.9x</td><td class="val">11.7x</td><td class="val">14.0x</td><td class="good">16.4x</td><td class="formula">=AVG()</td><td class="good">23.5x</td><td class="good">32.3x</td><td class="good">43.1x</td><td class="good">63.5x</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Result layout: sheet + insights -->
+      <div class="result-layout">
+        <!-- Mini KPI summary -->
+        <div>
+          <div class="stats-row" style="margin-top:0;grid-template-columns:repeat(4,1fr);">
+            <div class="stat-card" data-a="gold"><div class="stat-label">ARR Year 5</div><div class="stat-val" style="color:var(--gold);">$4.2M</div><div class="stat-change up">↑ 312% total</div></div>
+            <div class="stat-card" data-a="green"><div class="stat-label">Gross Margin</div><div class="stat-val">72%</div><div class="stat-change up">↑ healthy SaaS</div></div>
+            <div class="stat-card" data-a="blue"><div class="stat-label">Payback Period</div><div class="stat-val">11mo</div><div class="stat-change up">↑ good ratio</div></div>
+            <div class="stat-card" data-a="purple"><div class="stat-label">LTV/CAC Y5</div><div class="stat-val">63x</div><div class="stat-change up">↑ excellent</div></div>
+          </div>
+
+          <!-- Version history strip -->
+          <div class="card" style="margin-top:16px;">
+            <div class="card-header"><div class="card-title">Version History</div><a class="card-action">Restore</a></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <div style="padding:6px 12px;border-radius:7px;background:var(--gold-dim);border:1px solid rgba(212,168,67,0.25);font-size:12px;color:var(--gold);">v3 — Current</div>
+              <div style="padding:6px 12px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);font-size:12px;color:var(--text3);">v2 — Added bearish scenario</div>
+              <div style="padding:6px 12px;border-radius:7px;background:var(--bg3);border:1px solid var(--border);font-size:12px;color:var(--text3);">v1 — Initial generation</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Insight Panel -->
+        <div class="insight-panel">
+          <div class="ip-title">// AI Decision Engine</div>
+          <div class="insight-item" data-t="risk">
+            <div class="insight-tag">RISK</div>
+            <div class="insight-txt">Burn rate Y1–Y2 tinggi ($48K/mo). Runway hanya 18 bulan. Bridge funding diperlukan sebelum Q3 Y2.</div>
+          </div>
+          <div class="insight-item" data-t="warn">
+            <div class="insight-tag">WATCH</div>
+            <div class="insight-txt">Churn 3.2% di Q1 di atas benchmark SaaS B2B (2.0%). Fokus customer success early.</div>
+          </div>
+          <div class="insight-item" data-t="good">
+            <div class="insight-tag">STRONG</div>
+            <div class="insight-txt">LTV/CAC ratio 63x di Y5 sangat kuat. Investor tier metric yang excellent untuk Series B pitch.</div>
+          </div>
+          <div class="insight-item" data-t="info">
+            <div class="insight-tag">INSIGHT</div>
+            <div class="insight-txt">Naikkan harga 10% → profit naik est. +18% tanpa signifikan churn impact (elastisitas rendah).</div>
+          </div>
+          <div class="ip-title">// Scenarios</div>
+          <div class="scenario-tabs">
+            <button class="sc-tab active" onclick="setScen(this)">Base</button>
+            <button class="sc-tab" onclick="setScen(this)">Bull +40%</button>
+            <button class="sc-tab" onclick="setScen(this)">Bear -15%</button>
+          </div>
+          <div class="ip-title">// Recommendations</div>
+          <div class="rec-list">
+            <div class="rec-item"><span class="arr">→</span> Reduce CAC 15% via organic / content funnel</div>
+            <div class="rec-item"><span class="arr">→</span> Launch Enterprise tier Y3 — ACV $6K+</div>
+            <div class="rec-item"><span class="arr">→</span> Target profitability break-even Q2 Y3</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── PROJECTS ─── -->
+    <div id="page-projects" class="page" style="padding:28px 32px;">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Projects</div>
+          <div class="page-sub">8 projects across 3 folders</div>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-outline">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            List view
+          </button>
+          <button class="btn btn-gold" onclick="navigate('prompt')">+ New Project</button>
+        </div>
+      </div>
+      <div class="folder-tabs">
+        <button class="folder-tab active">📂 All Projects (8)</button>
+        <button class="folder-tab">💼 Finance (4)</button>
+        <button class="folder-tab">📣 Marketing (2)</button>
+        <button class="folder-tab">🪙 Web3 (2)</button>
+        <button class="folder-tab">+ New Folder</button>
+      </div>
+      <div class="projects-grid">
+        <div class="proj-card" onclick="navigate('result')">
+          <span class="proj-card-icon">📊</span>
+          <div class="proj-card-title">SaaS 5Y Financial Model</div>
+          <div class="proj-card-meta">Finance · 3 sheets · Last edited 2h ago</div>
+          <div class="proj-card-footer">
+            <span class="proj-card-badge tag-green">Active</span>
+            <div class="proj-card-actions">
+              <button class="proj-card-action" title="Duplicate"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+              <button class="proj-card-action" title="Share"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
+              <button class="proj-card-action" title="Export"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="proj-card" onclick="navigate('result')">
+          <span class="proj-card-icon">🪙</span>
+          <div class="proj-card-title">Bitcoin Treasury Strategy Q3</div>
+          <div class="proj-card-meta">Web3 · 4 sheets · Last edited 1d ago</div>
+          <div class="proj-card-footer">
+            <span class="proj-card-badge tag-gold">Web3</span>
+            <div class="proj-card-actions">
+              <button class="proj-card-action"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+              <button class="proj-card-action"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
+              <button class="proj-card-action"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="proj-card" onclick="navigate('result')">
+          <span class="proj-card-icon">📣</span>
+          <div class="proj-card-title">Q4 Marketing Campaign ROI</div>
+          <div class="proj-card-meta">Marketing · 2 sheets · Last edited 2d ago</div>
+          <div class="proj-card-footer">
+            <span class="proj-card-badge tag-blue">Done</span>
+            <div class="proj-card-actions">
+              <button class="proj-card-action"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+              <button class="proj-card-action"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
+              <button class="proj-card-action"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="proj-card" onclick="navigate('result')">
+          <span class="proj-card-icon">🏪</span>
+          <div class="proj-card-title">F&B Cashflow — 3 Year</div>
+          <div class="proj-card-meta">Finance · 5 sheets · Last edited 3d ago</div>
+          <div class="proj-card-footer">
+            <span class="proj-card-badge tag-gray">Draft</span>
+            <div class="proj-card-actions">
+              <button class="proj-card-action"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+              <button class="proj-card-action"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
+              <button class="proj-card-action"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="proj-card">
+          <span class="proj-card-icon">🔢</span>
+          <div class="proj-card-title">ROI Simulator — E-commerce</div>
+          <div class="proj-card-meta">Finance · 1 sheet · Last edited 5d ago</div>
+          <div class="proj-card-footer">
+            <span class="proj-card-badge tag-gray">Archived</span>
+            <div class="proj-card-actions">
+              <button class="proj-card-action"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+              <button class="proj-card-action"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
+              <button class="proj-card-action"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="proj-new" onclick="navigate('prompt')">
+          <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+          <span>New Project</span>
+          <span style="font-size:11px;color:var(--text3);">Generate with AI</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── TEMPLATES ─── -->
+    <div id="page-templates" class="page" style="padding:28px 32px;">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Template Library</div>
+          <div class="page-sub">Ready-to-use AI-powered financial templates</div>
+        </div>
+        <div class="header-actions">
+          <div class="topbar-search" style="max-width:220px;padding:7px 12px;">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:13px;height:13px;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" placeholder="Search templates...">
+          </div>
+        </div>
+      </div>
+      <div class="ai-rec-banner">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+        AI Recommendation: Based on your usage, you'd benefit from <strong style="margin:0 4px;">SaaS Unit Economics</strong> and <strong style="margin:0 4px;">Investor Deck Template</strong>.
+      </div>
+      <div class="folder-tabs" style="margin-bottom:20px;">
+        <button class="folder-tab active">All (12)</button>
+        <button class="folder-tab">💼 Finance</button>
+        <button class="folder-tab">🚀 Startup</button>
+        <button class="folder-tab">🪙 Web3</button>
+        <button class="folder-tab">📣 Marketing</button>
+        <button class="folder-tab">🏦 Investment</button>
+      </div>
+      <div class="template-grid">
+        <div class="tpl-card">
+          <span class="tpl-emoji">🚀</span>
+          <div class="tpl-name">Startup Financial Model</div>
+          <div class="tpl-desc">Complete 5-year model: revenue, COGS, P&L, cash flow, unit economics, cap table basics.</div>
+          <div class="tpl-footer"><span class="tpl-cost">2 credits</span><button class="tpl-use" onclick="navigate('prompt')">Use →</button></div>
+        </div>
+        <div class="tpl-card">
+          <span class="tpl-emoji">📈</span>
+          <div class="tpl-name">SaaS Unit Economics</div>
+          <div class="tpl-desc">MRR, ARR, CAC, LTV, churn cohorts, payback period, NRR — the metrics VCs love.</div>
+          <div class="tpl-footer"><span class="tpl-cost">2 credits</span><button class="tpl-use" onclick="navigate('prompt')">Use →</button></div>
+        </div>
+        <div class="tpl-card">
+          <span class="tpl-emoji">🪙</span>
+          <div class="tpl-name">Bitcoin Treasury Strategy</div>
+          <div class="tpl-desc">DCA schedule, allocation %, exit scenarios, treasury diversification, USD runway tracking.</div>
+          <div class="tpl-footer"><span class="tpl-cost">2 credits</span><button class="tpl-use" onclick="navigate('prompt')">Use →</button></div>
+        </div>
+        <div class="tpl-card">
+          <span class="tpl-emoji">⛓</span>
+          <div class="tpl-name">Tokenomics Model</div>
+          <div class="tpl-desc">Token allocation, vesting schedules, emission curve, ROI per investor round, FDV scenarios.</div>
+          <div class="tpl-footer"><span class="tpl-cost">3 credits</span><button class="tpl-use" onclick="navigate('prompt')">Use →</button></div>
+        </div>
+        <div class="tpl-card">
+          <span class="tpl-emoji">📣</span>
+          <div class="tpl-name">Marketing Campaign ROI</div>
+          <div class="tpl-desc">CAC by channel, conversion funnel, attribution model, budget allocation, ROAS tracking.</div>
+          <div class="tpl-footer"><span class="tpl-cost">1 credit</span><button class="tpl-use" onclick="navigate('prompt')">Use →</button></div>
+        </div>
+        <div class="tpl-card">
+          <span class="tpl-emoji">💼</span>
+          <div class="tpl-name">Budget Planner</div>
+          <div class="tpl-desc">Annual budget with department breakdown, variance tracking, headcount costs, capex/opex.</div>
+          <div class="tpl-footer"><span class="tpl-cost">1 credit</span><button class="tpl-use" onclick="navigate('prompt')">Use →</button></div>
+        </div>
+        <div class="tpl-card">
+          <span class="tpl-emoji">🏪</span>
+          <div class="tpl-name">F&B Cashflow Model</div>
+          <div class="tpl-desc">Daily/monthly cash flow, food cost %, labor cost, break-even, peak/off-peak scenarios.</div>
+          <div class="tpl-footer"><span class="tpl-cost">2 credits</span><button class="tpl-use" onclick="navigate('prompt')">Use →</button></div>
+        </div>
+        <div class="tpl-card">
+          <span class="tpl-emoji">🏆</span>
+          <div class="tpl-name">Investor Pitch Deck Model</div>
+          <div class="tpl-desc">Investor-ready financial summary: use of funds, runway, valuation assumptions, exit multiples.</div>
+          <div class="tpl-footer"><span class="tpl-cost">3 credits</span><button class="tpl-use" onclick="navigate('prompt')">Use →</button></div>
+        </div>
+        <div class="tpl-card">
+          <span class="tpl-emoji">🔢</span>
+          <div class="tpl-name">ROI Calculator</div>
+          <div class="tpl-desc">Quick ROI analysis with payback period, NPV, IRR, sensitivity tables — for any investment.</div>
+          <div class="tpl-footer"><span class="tpl-cost">1 credit</span><button class="tpl-use" onclick="navigate('prompt')">Use →</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── INSIGHTS ─── -->
+    <div id="page-insights" class="page" style="padding:28px 32px;">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Insights Dashboard</div>
+          <div class="page-sub">AI-generated analysis across all your projects</div>
+        </div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card" data-a="green"><div class="stat-label">Total ARR (Y5 avg)</div><div class="stat-val" style="color:var(--green);">$4.2M</div><div class="stat-change up">↑ best case</div></div>
+        <div class="stat-card" data-a="red"><div class="stat-label">Avg Burn Rate</div><div class="stat-val" style="color:var(--red);">$48K</div><div class="stat-change down">↓ optimize</div></div>
+        <div class="stat-card" data-a="gold"><div class="stat-label">Avg LTV/CAC</div><div class="stat-val">31x</div><div class="stat-change up">↑ excellent</div></div>
+        <div class="stat-card" data-a="blue"><div class="stat-label">Avg Runway</div><div class="stat-val">18mo</div><div class="stat-change warn">⚠ watch</div></div>
+      </div>
+      <div class="grid-2" style="margin-top:20px;">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Top Insights Across Projects</div></div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div class="insight-item" data-t="risk"><div class="insight-tag">RISK</div><div class="insight-txt"><strong>SaaS Model:</strong> Burn rate exceeds safe threshold at Month 14. Bridge funding recommended.</div></div>
+            <div class="insight-item" data-t="warn"><div class="insight-tag">WATCH</div><div class="insight-txt"><strong>BTC Treasury:</strong> BTC allocation 40% above recommended risk tolerance for Series A stage.</div></div>
+            <div class="insight-item" data-t="good"><div class="insight-tag">STRONG</div><div class="insight-txt"><strong>SaaS Model:</strong> LTV/CAC 63x at Y5 — top decile SaaS metric. Highlight in investor deck.</div></div>
+            <div class="insight-item" data-t="info"><div class="insight-tag">OPPORTUNITY</div><div class="insight-txt"><strong>F&B Model:</strong> Price increase 8% could improve net margin from 12% → 19% with minimal churn risk.</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Credit Usage History</div></div>
+          <div style="font-size:11px;color:var(--text3);font-family:var(--font-m);margin-bottom:14px;text-transform:uppercase;letter-spacing:.08em;">This month</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--border);">
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span>📊</span> SaaS 5Y Generation</div>
+              <span class="tag tag-gold">-2 cr</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--border);">
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span>🪙</span> BTC Treasury Generation</div>
+              <span class="tag tag-gold">-2 cr</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--border);">
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span>🧠</span> AI Refine — Add bearish</div>
+              <span class="tag tag-purple">-1 cr</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg3);border-radius:var(--r);border:1px solid var(--border);">
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span>📣</span> Marketing ROI Generation</div>
+              <span class="tag tag-gold">-1 cr</span>
+            </div>
+          </div>
+          <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:12px;">
+            <span style="color:var(--text3)">Total used this month</span>
+            <span style="color:var(--gold);font-family:var(--font-m);font-weight:600;">6 credits</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SETTINGS ─── -->
+    <div id="page-settings" class="page" style="padding:28px 32px;">
+      <div class="page-header">
+        <div><div class="page-title">Settings</div><div class="page-sub">Manage your account and preferences</div></div>
+      </div>
+      <div class="settings-layout">
+        <div class="settings-nav">
+          <div class="set-nav-item active"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile</div>
+          <div class="set-nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg> Company</div>
+          <div class="set-nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Billing</div>
+          <div class="set-nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg> API Keys</div>
+          <div class="set-nav-item"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg> Notifications</div>
+        </div>
+        <div class="settings-content">
+          <div class="settings-section">
+            <h3>Profile Information</h3>
+            <div class="form-row-2">
+              <div class="form-row"><label class="form-label">First Name</label><input class="form-input" value="Raka"></div>
+              <div class="form-row"><label class="form-label">Last Name</label><input class="form-input" value="Aditya"></div>
+            </div>
+            <div class="form-row"><label class="form-label">Email Address</label><input class="form-input" value="raka@sheetpoint.ai"></div>
+            <div class="form-row"><label class="form-label">Job Title</label><input class="form-input" value="Founder & CEO"></div>
+            <button class="btn btn-gold" style="margin-top:6px;">Save Changes</button>
+          </div>
+          <div class="settings-section">
+            <h3>Subscription & Billing</h3>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div class="plan-card current">
+                <div style="font-size:24px;">🚀</div>
+                <div class="plan-info">
+                  <div class="plan-name">Free Trial</div>
+                  <div class="plan-price">30 credits · Expires in 14 days</div>
+                </div>
+                <span class="tag tag-gold">Current</span>
+              </div>
+              <div class="plan-card">
+                <div style="font-size:24px;">⚡</div>
+                <div class="plan-info">
+                  <div class="plan-name">Pro Plan</div>
+                  <div class="plan-price">$29/mo · 200 credits · All features</div>
+                </div>
+                <button class="btn btn-gold" style="padding:7px 16px;font-size:12px;">Upgrade</button>
+              </div>
+              <div class="plan-card">
+                <div style="font-size:24px;">🏢</div>
+                <div class="plan-info">
+                  <div class="plan-name">Enterprise</div>
+                  <div class="plan-price">Custom · Unlimited · API access · Team</div>
+                </div>
+                <button class="btn btn-outline" style="padding:7px 16px;font-size:12px;">Contact Sales</button>
+              </div>
+            </div>
+          </div>
+          <div class="settings-section">
+            <h3>API Key <span class="tag tag-gray" style="vertical-align:middle;margin-left:6px;">Coming Soon</span></h3>
+            <div class="alert alert-warn">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              API access is available on Enterprise plan. Upgrade to integrate SheetPoint into your own tools.
+            </div>
+            <div class="api-key-row">
+              <div class="api-key-val">sp_live_••••••••••••••••••••••••••••••••</div>
+              <button class="api-copy">Reveal</button>
+              <button class="api-copy">Copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── BILLING ─── -->
+    <div id="page-billing" class="page" style="padding:28px 32px;">
+      <div class="page-header">
+        <div><div class="page-title">Billing & Credits</div><div class="page-sub">Manage your plan and credit balance</div></div>
+      </div>
+      <div class="alert alert-warn" style="max-width:700px;">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        You have <strong>24 credits remaining</strong> on your free trial. Upgrade to Pro to keep building without interruption.
+      </div>
+      <div class="grid-3" style="max-width:800px;">
+        <div class="stat-card" data-a="gold"><div class="stat-label">Credits Remaining</div><div class="stat-val" style="color:var(--gold)">24</div><div class="stat-change warn">of 30 trial credits</div></div>
+        <div class="stat-card" data-a="blue"><div class="stat-label">Credits Used</div><div class="stat-val">6</div><div class="stat-change up">this cycle</div></div>
+        <div class="stat-card" data-a="red"><div class="stat-label">Trial Expires</div><div class="stat-val">14d</div><div class="stat-change down">Jun 6, 2025</div></div>
+      </div>
+      <div class="grid-3" style="margin-top:24px;max-width:800px;">
+        <div class="card" style="border:2px solid rgba(212,168,67,0.3);background:var(--gold-d2);position:relative;">
+          <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);">
+            <span style="background:var(--gold);color:#0A0C10;font-size:10px;font-weight:700;padding:3px 12px;border-radius:10px;font-family:var(--font-d);">MOST POPULAR</span>
+          </div>
+          <div style="text-align:center;padding:8px 0;">
+            <div style="font-size:28px;margin-bottom:8px;">⚡</div>
+            <div style="font-family:var(--font-d);font-size:17px;font-weight:700;">Pro</div>
+            <div style="font-size:28px;font-family:var(--font-d);font-weight:800;color:var(--gold);margin:8px 0;">$29<span style="font-size:13px;color:var(--text3);">/mo</span></div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">200 credits per month</div>
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:7px;margin-bottom:20px;text-align:left;">
+              <li style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:7px;"><span style="color:var(--green);">✓</span> 200 credits / month</li>
+              <li style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:7px;"><span style="color:var(--green);">✓</span> All template categories</li>
+              <li style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:7px;"><span style="color:var(--green);">✓</span> AI Refine unlimited</li>
+              <li style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:7px;"><span style="color:var(--green);">✓</span> Export with branding</li>
+              <li style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:7px;"><span style="color:var(--green);">✓</span> Version history</li>
+            </ul>
+            <button class="btn btn-gold" style="width:100%;justify-content:center;padding:10px;">Upgrade to Pro →</button>
+          </div>
+        </div>
+        <div class="card">
+          <div style="text-align:center;padding:8px 0;">
+            <div style="font-size:28px;margin-bottom:8px;">🏢</div>
+            <div style="font-family:var(--font-d);font-size:17px;font-weight:700;">Enterprise</div>
+            <div style="font-size:28px;font-family:var(--font-d);font-weight:800;margin:8px 0;">Custom</div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:16px;">Unlimited · Team access</div>
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:7px;margin-bottom:20px;text-align:left;">
+              <li style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:7px;"><span style="color:var(--green);">✓</span> Unlimited generations</li>
+              <li style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:7px;"><span style="color:var(--green);">✓</span> Team collaboration</li>
+              <li style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:7px;"><span style="color:var(--green);">✓</span> API access</li>
+              <li style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:7px;"><span style="color:var(--green);">✓</span> Custom templates</li>
+              <li style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:7px;"><span style="color:var(--green);">✓</span> Dedicated support</li>
+            </ul>
+            <button class="btn btn-outline" style="width:100%;justify-content:center;padding:10px;">Contact Sales →</button>
+          </div>
+        </div>
+        <div class="card">
+          <div style="text-align:center;padding:8px 0;">
+            <div style="font-size:28px;margin-bottom:8px;">⚡</div>
+            <div style="font-family:var(--font-d);font-size:17px;font-weight:700;">Credit Top-Up</div>
+            <div style="font-size:12px;color:var(--text2);margin:8px 0 16px;">Buy extra credits anytime</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--bg3);border-radius:8px;border:1px solid var(--border);font-size:13px;">
+                <span>50 credits</span><span style="color:var(--gold);">$9</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--bg3);border-radius:8px;border:1px solid var(--border);font-size:13px;">
+                <span>150 credits</span><span style="color:var(--gold);">$24</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--bg3);border-radius:8px;border:1px solid var(--border);font-size:13px;">
+                <span>500 credits</span><span style="color:var(--gold);">$69</span>
+              </div>
+            </div>
+            <button class="btn btn-surface" style="width:100%;justify-content:center;padding:10px;">Buy Credits →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end .main -->
+</div><!-- end .app-body -->
+
+<script>
+// Navigation
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const target = document.getElementById('page-' + page);
+  if (target) target.classList.add('active');
+  const navMap = {home:'home',prompt:'prompt',result:'result',projects:'projects',templates:'templates',insights:'insights',settings:'settings',billing:'billing'};
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'"+page+"'")) n.classList.add('active');
+  });
+}
+
+// AI Generate simulation
+function startGenerate() {
+  navigate('prompt');
+  const inputView = document.getElementById('prompt-input-view');
+  const processing = document.getElementById('ai-processing');
+  inputView.style.display = 'none';
+  processing.classList.add('show');
+  const steps = [1,2,3,4,5];
+  const delays = [600,1200,1900,2600,3200];
+  steps.forEach((s, i) => {
+    setTimeout(() => {
+      const el = document.getElementById('step-' + s);
+      if (i > 0) document.getElementById('step-' + steps[i-1]).classList.remove('active');
+      if (i > 0) {
+        const prev = document.getElementById('step-' + steps[i-1]);
+        prev.classList.add('done');
+        prev.innerHTML = prev.innerHTML.replace('<circle cx="12" cy="12" r="10"/>','<polyline points="20 6 9 17 4 12"/>');
+        prev.style.opacity = '1';
+      }
+      el.classList.add('active');
+      el.style.opacity = '1';
+    }, delays[i]);
+  });
+  setTimeout(() => {
+    processing.classList.remove('show');
+    inputView.style.display = 'block';
+    // Reset steps
+    steps.forEach(s => {
+      const el = document.getElementById('step-' + s);
+      el.classList.remove('done','active');
+      el.style.opacity = s === 1 ? '1' : '0.4';
+    });
+    navigate('result');
+  }, 4200);
+}
+
+function setIntent(el, label) {
+  document.querySelectorAll('.intent-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function usePrompt(el) {
+  const text = el.querySelector ? el.innerText.replace('›','').trim() : '';
+  const ta = document.getElementById('pe-prompt');
+  if (ta) ta.value = text;
+}
+
+function switchTab(el) {
+  document.querySelectorAll('.rtab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function setScen(el) {
+  document.querySelectorAll('.sc-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function showRefineBox() {
+  const box = document.getElementById('refine-box');
+  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleExport() {
+  const dd = document.getElementById('export-dd');
+  dd.classList.toggle('show');
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.export-wrap')) {
+    document.getElementById('export-dd').classList.remove('show');
+  }
+});
+</script>
+</body>
+</html>
