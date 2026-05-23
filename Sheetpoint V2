@@ -1,0 +1,274 @@
+1. PROJECT STRUCTURE (Next.js App Router)
+{
+  "project": "sheetpoint-ai",
+  "stack": {
+    "frontend": "Next.js 14 (App Router)",
+    "backend": "Next.js API Routes",
+    "database": "PostgreSQL + Prisma ORM",
+    "auth": "JWT / NextAuth",
+    "ai": "OpenAI API",
+    "payment": "Stripe (optional)"
+  },
+  "folders": [
+    "app/",
+    "app/api/",
+    "app/dashboard/",
+    "components/",
+    "lib/",
+    "prisma/",
+    "types/"
+  ]
+}
+
+2. DATABASE SCHEMA (PRISMA - PostgreSQL)
+{
+  "prisma_schema": "
+generator client {
+  provider = \"prisma-client-js\"
+}
+
+datasource db {
+  provider = \"postgresql\"
+  url      = env(\"DATABASE_URL\")
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  password    String
+  credits     Int      @default(30)
+  plan        String   @default(\"free\")
+  createdAt   DateTime @default(now())
+  projects    Project[]
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  prompt      String
+  result      Json
+  createdAt   DateTime @default(now())
+  User        User     @relation(fields: [userId], references: [id])
+}
+
+model CreditUsage {
+  id        String   @id @default(uuid())
+  userId    String
+  used      Int
+  createdAt DateTime @default(now())
+}
+
+model Subscription {
+  id        String   @id @default(uuid())
+  userId    String
+  plan      String
+  status    String
+  createdAt DateTime @default(now())
+}
+"
+}
+
+3. API ENDPOINTS (NEXT.JS)
+A. AI PROMPT GENERATION API
+{
+  "api_generate": "
+import { NextResponse } from 'next/server'
+import OpenAI from 'openai'
+import { prisma } from '@/lib/prisma'
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+
+export async function POST(req) {
+  const { userId, prompt } = await req.json()
+
+  const user = await prisma.user.findUnique({ where: { id: userId } })
+
+  if (user.credits <= 0) {
+    return NextResponse.json({ error: 'No credits left' }, { status: 403 })
+  }
+
+  const completion = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [{ role: 'user', content: prompt }]
+  })
+
+  const result = completion.choices[0].message.content
+
+  await prisma.project.create({
+    data: {
+      userId,
+      title: 'AI Generated Project',
+      prompt,
+      result: JSON.parse(JSON.stringify(result))
+    }
+  })
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { credits: { decrement: 1 } }
+  })
+
+  return NextResponse.json({ result })
+}
+"
+}
+
+B. USER DASHBOARD API
+{
+  "api_dashboard": "
+import { prisma } from '@/lib/prisma'
+
+export async function GET(req) {
+  const userId = req.headers.get('user-id')
+
+  const projects = await prisma.project.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' }
+  })
+
+  return Response.json({ projects })
+}
+"
+}
+
+C. CREDIT TOP-UP API
+{
+  "api_credit": "
+import { prisma } from '@/lib/prisma'
+
+export async function POST(req) {
+  const { userId, amount } = await req.json()
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { credits: { increment: amount } }
+  })
+
+  return Response.json({ success: true })
+}
+"
+}
+
+4. AI SERVICE LAYER
+{
+  "ai_service": "
+import OpenAI from 'openai'
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+})
+
+export async function generateAI(prompt) {
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4o-mini',
+    messages: [{ role: 'user', content: prompt }]
+  })
+
+  return response.choices[0].message.content
+}
+"
+}
+
+5. FRONTEND – LANDING PAGE
+{
+  "landing_page": "
+export default function Home() {
+  return (
+    <main className='bg-black text-white min-h-screen p-10'>
+      <h1 className='text-5xl font-bold'>Sheetpoint AI</h1>
+      <p className='mt-4 text-lg'>
+        AI Financial Modeling & Decision Engine
+      </p>
+
+      <button className='mt-6 px-6 py-3 bg-yellow-500 text-black rounded-xl'>
+        Try Free (30 Credits)
+      </button>
+    </main>
+  )
+}
+"
+}
+
+6. FRONTEND – DASHBOARD
+{
+  "dashboard_page": "
+'use client'
+
+import { useState } from 'react'
+
+export default function Dashboard() {
+  const [prompt, setPrompt] = useState('')
+  const [result, setResult] = useState('')
+
+  const handleGenerate = async () => {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      body: JSON.stringify({ userId: 'USER_ID', prompt })
+    })
+
+    const data = await res.json()
+    setResult(data.result)
+  }
+
+  return (
+    <div className='p-6'>
+      <h1 className='text-2xl font-bold'>AI Dashboard</h1>
+
+      <textarea
+        className='w-full p-3 border mt-4'
+        placeholder='Enter your financial prompt...'
+        onChange={(e) => setPrompt(e.target.value)}
+      />
+
+      <button onClick={handleGenerate} className='mt-3 bg-blue-500 px-4 py-2'>
+        Generate
+      </button>
+
+      <pre className='mt-6 bg-gray-900 text-white p-4'>
+        {result}
+      </pre>
+    </div>
+  )
+}
+"
+}
+
+7. AUTH (SIMPLE JWT)
+{
+  "auth": "
+import jwt from 'jsonwebtoken'
+
+export function generateToken(user) {
+  return jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+    expiresIn: '7d'
+  })
+}
+"
+}
+
+8. SYSTEM FLOW (LOGIC)
+{
+  "flow": [
+    "User signup → get 30 credits",
+    "User login → dashboard",
+    "User input prompt",
+    "API → OpenAI",
+    "Result generated",
+    "Save to DB",
+    "Credit deducted",
+    "User export/edit"
+  ]
+}
+
+9. ADVANCED FEATURES (OPTIONAL UPGRADE)
+{
+  "advanced": [
+    "Stripe subscription billing",
+    "Team workspace",
+    "Project sharing link",
+    "AI memory (history-based context)",
+    "Multi-model AI (cheap vs premium)",
+    "Export PDF / Excel"
+  ]
+}
