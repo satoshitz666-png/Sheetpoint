@@ -1,0 +1,208 @@
+1. ARSITEKTUR DEPLOYMENT
+Frontend (Next.js - Vercel)
+        ↓
+API Routes (Next.js Backend)
+        ↓
+Supabase (PostgreSQL + Auth + Storage)
+        ↓
+OpenAI API (AI Engine)
+
+2. SETUP SUPABASE (DATABASE + AUTH)
+ Step 1: Buat Project
+Buka:
+https://supabase.com
+Create new project
+Pilih region (Singapore recommended)
+
+Step 2: Ambil Credentials
+
+Dari dashboard Supabase:
+
+SUPABASE_URL=your_project_url
+SUPABASE_ANON_KEY=your_anon_key
+DATABASE_URL=your_postgres_url
+
+Step 3: Setup Database Schema
+
+Masuk ke SQL Editor → Run Query
+
+-- USERS
+create table users (
+  id uuid primary key default uuid_generate_v4(),
+  email text unique,
+  password text,
+  credits int default 30,
+  plan text default 'free',
+  created_at timestamp default now()
+);
+
+-- PROJECTS
+create table projects (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid references users(id),
+  title text,
+  prompt text,
+  result jsonb,
+  created_at timestamp default now()
+);
+
+-- CREDIT USAGE
+create table credit_usage (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid,
+  used int,
+  created_at timestamp default now()
+);
+
+Step 4: Enable Auth 
+
+Supabase → Authentication → Enable:
+
+Email login
+Google login (optional)
+
+3. SETUP NEXT.JS PROJECT
+Step 1: Create App
+npx create-next-app@latest sheetpoint-ai
+cd sheetpoint-ai
+
+Step 2: Install Dependencies
+npm install @supabase/supabase-js openai prisma @prisma/client
+Step 3: ENV CONFIG
+
+Buat file .env.local
+
+NEXT_PUBLIC_SUPABASE_URL=xxxx
+NEXT_PUBLIC_SUPABASE_ANON_KEY=xxxx
+
+DATABASE_URL=xxxx
+OPENAI_API_KEY=xxxx
+JWT_SECRET=your_secret
+
+4. CONNECT SUPABASE (CLIENT)
+/lib/supabase.js
+import { createClient } from '@supabase/supabase-js'
+
+export const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+)
+
+5. API ROUTE (AI GENERATION)
+/app/api/generate/route.js
+import OpenAI from "openai"
+import { supabase } from "@/lib/supabase"
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+})
+
+export async function POST(req) {
+  const { userId, prompt } = await req.json()
+
+  // cek credit
+  const { data: user } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", userId)
+    .single()
+
+  if (user.credits <= 0) {
+    return Response.json({ error: "No credits left" }, { status: 403 })
+  }
+
+  // AI generate
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [{ role: "user", content: prompt }]
+  })
+
+  const result = completion.choices[0].message.content
+
+  // save project
+  await supabase.from("projects").insert({
+    user_id: userId,
+    title: "AI Project",
+    prompt,
+    result
+  })
+
+  // update credit
+  await supabase
+    .from("users")
+    .update({ credits: user.credits - 1 })
+    .eq("id", userId)
+
+  return Response.json({ result })
+}
+
+6. DASHBOARD CONNECT
+const handleGenerate = async () => {
+  const res = await fetch("/api/generate", {
+    method: "POST",
+    body: JSON.stringify({
+      userId: session.user.id,
+      prompt
+    })
+  })
+
+  const data = await res.json()
+  setResult(data.result)
+}
+
+7. DEPLOY KE VERCEL
+Step 1: Push ke GitHub
+git init
+git add .
+git commit -m "init"
+git branch -M main
+git remote add origin https://github.com/yourrepo.git
+git push -u origin main
+
+Step 2: Deploy
+Buka:
+👉 https://vercel.com
+Import project dari GitHub
+
+Step 3: Set Environment Variables
+
+Di Vercel dashboard:
+
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+OPENAI_API_KEY=
+DATABASE_URL=
+JWT_SECRET=
+
+Step 4: Deploy 
+
+Klik Deploy
+
+👉 Live dalam 1–2 menit
+
+8. PRODUCTION SECURITY (IMPORTANT)
+Row Level Security (Supabase)
+
+Enable RLS:
+
+alter table projects enable row level security;
+
+Policy:
+
+create policy "Users can access their projects"
+on projects
+for select
+using (auth.uid() = user_id);
+
+9. OPTIONAL (STRIPE BILLING)
+Install Stripe
+Create API /api/checkout
+Add subscription plan
+
+10. MONITORING
+
+Gunakan:
+
+Vercel Analytics
+Supabase Logs
+OpenAI usage dashboard
