@@ -1,0 +1,8 @@
+export const roles = {
+  ADMIN: ["manage_users", "view_all"],
+  USER: ["create_project", "use_ai"],
+};
+
+export function checkPermission(role: string, action: string) {
+  return roles[role]?.includes(action);
+}
