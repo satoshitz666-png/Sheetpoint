@@ -1,0 +1,22 @@
+"use client";
+import { useEffect, useState } from "react";
+
+export default function Admin() {
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    fetch("/api/admin/users")
+      .then((res) => res.json())
+      .then(setUsers);
+  }, []);
+
+  return (
+    <div>
+      <h1>Admin Dashboard</h1>
+
+      {users.map((u: any) => (
+        <div key={u.id}>{u.email}</div>
+      ))}
+    </div>
+  );
+}
