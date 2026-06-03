@@ -1,0 +1,19 @@
+[ Browser / Client ]
+        ↓
+[ Next.js Frontend (App Router) ]
+        ↓
+[ Middleware (Auth + Role Guard) ]
+        ↓
+[ API Layer (/api) ]
+        ↓
+[ Service Layer ]
+   ├── Auth Service
+   ├── Project Service
+   ├── AI Service
+   └── Admin Service
+        ↓
+[ Prisma ORM ]
+        ↓
+[ PostgreSQL DB ]
+        ↓
+[ External: OpenAI API ]
