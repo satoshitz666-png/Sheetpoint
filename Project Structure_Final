@@ -1,0 +1,24 @@
+sheetpoint/
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   ├── dashboard/        # USER
+│   ├── admin/            # ADMIN
+│   └── api/
+│       ├── auth/
+│       ├── projects/
+│       ├── ai/
+│       └── admin/
+│
+├── lib/
+│   ├── prisma.ts
+│   ├── auth.ts
+│   ├── rbac.ts
+│   ├── openai.ts
+│
+├── prisma/
+│   └── schema.prisma
+│
+├── middleware.ts
+├── .env
+├── package.json
